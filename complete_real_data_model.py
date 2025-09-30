@@ -275,6 +275,118 @@ def drawdown(return_series: pd.Series):
         "Drawdown": drawdowns
     })
 
+def calculate_max_drawdown(prices):
+    """
+    Tính max drawdown cho một series giá
+    """
+    peak = prices.expanding().max()
+    drawdown = (prices - peak) / peak
+    return drawdown.min()
+
+def analyze_individual_stock_performance(df_return, df_price, ticker):
+    """
+    Phân tích performance riêng cho từng mã cổ phiếu
+    """
+    print(f"\n📊 PHÂN TÍCH CHI TIẾT: {ticker}")
+    print("=" * 50)
+    
+    # Get data for specific ticker
+    returns = df_return[ticker].dropna()
+    prices = df_price[ticker].dropna()
+    
+    # 1. Daily Statistics
+    daily_stats = {
+        'Daily Mean Return': returns.mean(),
+        'Daily Std': returns.std(),
+        'Daily Min': returns.min(),
+        'Daily Max': returns.max(),
+        'Daily Skewness': returns.skew(),
+        'Daily Kurtosis': returns.kurtosis()
+    }
+    
+    # 2. Monthly Statistics
+    monthly_returns = returns.resample('M').apply(lambda x: (1 + x).prod() - 1)
+    monthly_stats = {
+        'Monthly Mean Return': monthly_returns.mean(),
+        'Monthly Std': monthly_returns.std(),
+        'Monthly Min': monthly_returns.min(),
+        'Monthly Max': monthly_returns.max(),
+        'Monthly Skewness': monthly_returns.skew(),
+        'Monthly Kurtosis': monthly_returns.kurtosis()
+    }
+    
+    # 3. Annual Statistics
+    annual_returns = returns.resample('Y').apply(lambda x: (1 + x).prod() - 1)
+    annual_stats = {
+        'Annual Mean Return': annual_returns.mean(),
+        'Annual Std': annual_returns.std(),
+        'Annual Min': annual_returns.min(),
+        'Annual Max': annual_returns.max()
+    }
+    
+    # 4. Risk Metrics
+    risk_metrics = {
+        'VaR (5%)': returns.quantile(0.05),
+        'VaR (1%)': returns.quantile(0.01),
+        'CVaR (5%)': returns[returns <= returns.quantile(0.05)].mean(),
+        'Max Drawdown': calculate_max_drawdown(prices),
+        'Sharpe Ratio': returns.mean() / returns.std() if returns.std() > 0 else 0
+    }
+    
+    # Create comprehensive stats table
+    stats_data = {
+        'Daily': daily_stats,
+        'Monthly': monthly_stats,
+        'Annual': annual_stats,
+        'Risk Metrics': risk_metrics
+    }
+    
+    stats_df = pd.DataFrame(stats_data).fillna(0)
+    
+    print(f"📈 SHAPE & STATISTICS TABLE:")
+    print(stats_df.round(6))
+    
+    # Create individual charts
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+    fig.suptitle(f'Detailed Analysis: {ticker}', fontsize=16, fontweight='bold')
+    
+    # Chart 1: Daily Returns Distribution
+    axes[0, 0].hist(returns, bins=50, alpha=0.7, color='steelblue', edgecolor='black')
+    axes[0, 0].axvline(returns.mean(), color='red', linestyle='--', label=f'Mean: {returns.mean():.4f}')
+    axes[0, 0].set_title(f'{ticker} - Daily Returns Distribution')
+    axes[0, 0].set_xlabel('Daily Return')
+    axes[0, 0].set_ylabel('Frequency')
+    axes[0, 0].legend()
+    axes[0, 0].grid(True, alpha=0.3)
+    
+    # Chart 2: Monthly Returns
+    monthly_returns.plot(ax=axes[0, 1], color='green', linewidth=1.5)
+    axes[0, 1].axhline(0, color='red', linestyle='--', alpha=0.7)
+    axes[0, 1].set_title(f'{ticker} - Monthly Returns')
+    axes[0, 1].set_ylabel('Monthly Return')
+    axes[0, 1].grid(True, alpha=0.3)
+    
+    # Chart 3: Price Evolution
+    prices.plot(ax=axes[1, 0], color='purple', linewidth=1.5)
+    axes[1, 0].set_title(f'{ticker} - Price Evolution')
+    axes[1, 0].set_ylabel('Price')
+    axes[1, 0].grid(True, alpha=0.3)
+    
+    # Chart 4: Rolling Volatility (30-day)
+    rolling_vol = returns.rolling(30).std() * np.sqrt(250)
+    rolling_vol.plot(ax=axes[1, 1], color='orange', linewidth=1.5)
+    axes[1, 1].set_title(f'{ticker} - Rolling Volatility (30-day)')
+    axes[1, 1].set_ylabel('Annualized Volatility')
+    axes[1, 1].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(f'{ticker.lower()}_detailed_analysis.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"✅ Chart saved: {ticker.lower()}_detailed_analysis.png")
+    
+    return stats_df
+
 def run_complete_quantitative_analysis(price_data, df_return):
     """
     Chạy phân tích quantitative flow HOÀN CHỈNH theo chuẩn sample.py
@@ -292,16 +404,14 @@ def run_complete_quantitative_analysis(price_data, df_return):
     mean_values = df_return.mean()
     compound_return = (df_return + 1).prod() - 1
     
-    # 1.2 Risk Analysis
-    std_daily = df_return.std()
-    variance = df_return.var()
-    volatility = variance.pow(0.5)
-    semideviation = df_return[df_return < 0].std(ddof=0)
+    # 1.2 Risk Analysis - THEO YÊU CẦU
+    variance = df_return.var()  # Output là variance
+    semideviation = df_return[df_return < 0].std(ddof=0)  # Vẫn chạy semideviation như code cũ
     
     # 1.3 Annualized Metrics
     n_days = len(df_return)
     annualized_return = (df_return + 1).prod()**(250 / n_days) - 1
-    annualized_volatility = df_return.std() * np.sqrt(250)
+    annualized_volatility = df_return.std() * np.sqrt(250)  # Thêm annualized_volatility
     
     # 1.4 Value at Risk Analysis
     var_historic_5 = df_return.aggregate(var_historic, level=5)
@@ -319,21 +429,39 @@ def run_complete_quantitative_analysis(price_data, df_return):
     
     print("\n📊 RISK SUMMARY:")
     risk_summary = pd.DataFrame({
-        'Daily Volatility': std_daily,
-        'Annualized Volatility': annualized_volatility,
-        'Semideviation': semideviation,
+        'Variance': variance,  # Output là variance thay vì volatility
+        'Annualized Volatility': annualized_volatility,  # Thêm annualized_volatility
+        'Semideviation': semideviation,  # Vẫn chạy semideviation như code cũ
         'VaR (Historic 5%)': var_historic_5,
         'VaR (Gaussian 5%)': var_gaussian_5,
         'CVaR (Historic 5%)': cvar_historic_5
     })
+    # Display full table without truncation
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
     print(risk_summary.round(4))
+    pd.reset_option('display.max_columns')
+    pd.reset_option('display.width')
     
     print("\n🔢 STEP 2: SHARPE RATIO & RISK-ADJUSTED METRICS")
     print("-" * 50)
     
-    # 2.1 Sharpe Ratio
+    # 2.1 RTRR (Return-to-Risk Ratio) - THEO SAMPLE.PY
+    rtrr = annualized_return / annualized_volatility
+    print("📊 RTRR (Return-to-Risk Ratio) RANKING:")
+    print(rtrr.sort_values(ascending=False).round(4))
+    
+    rtrr_df = pd.DataFrame({
+        'Annualized Return': annualized_return,
+        'Annualized Volatility': annualized_volatility,
+        'RTRR': rtrr
+    })
+    print("\n📊 RTRR DETAILED TABLE:")
+    print(rtrr_df.sort_values(by='RTRR', ascending=False).round(4))
+    
+    # 2.2 Sharpe Ratio
     excess_return = annualized_return - riskfree_rate
-    sharpe_ratio = excess_return / annualized_volatility
+    sharpe_ratio = excess_return / annualized_volatility  # Sử dụng annualized_volatility
     
     print("📊 SHARPE RATIO RANKING:")
     sharpe_sorted = sharpe_ratio.sort_values(ascending=False)
@@ -352,6 +480,31 @@ def run_complete_quantitative_analysis(price_data, df_return):
         max_drawdowns[ticker] = dd_data["Drawdown"].min()
         print(f"   {ticker}: Max Drawdown = {max_drawdowns[ticker]:.2%}")
     
+    # 2.3 Minimum Drawdown Analysis - THEO SAMPLE.PY
+    print("\n📊 MINIMUM DRAWDOWN BY SECTOR:")
+    min_drawdowns = pd.Series(max_drawdowns)
+    min_drawdowns_sorted = min_drawdowns.sort_values(ascending=True)  # Sắp xếp từ thấp đến cao
+    print(min_drawdowns_sorted.round(4))
+    
+    # Create minimum drawdown chart
+    plt.figure(figsize=(12, 6))
+    min_dd_data = min_drawdowns_sorted
+    ax = min_dd_data.plot.bar(color='darkred', alpha=0.7)
+    plt.title('Minimum Drawdown by Stock (Best to Worst)', fontsize=16, fontweight='bold')
+    plt.ylabel('Minimum Drawdown (%)', fontsize=12)
+    plt.xlabel('Stocks', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for i, v in enumerate(min_dd_data.values):
+        ax.text(i, v - 0.01, f'{v:.2%}', 
+                ha='center', va='top', fontweight='bold', color='white')
+    
+    plt.tight_layout()
+    plt.savefig('minimum_drawdown_chart.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
     # Portfolio optimization (Top 3)
     top_3_stocks = sharpe_ratio.sort_values(ascending=False).head(3).index.tolist()
     print(f"\n🏆 Top 3 stocks by Sharpe Ratio: {top_3_stocks}")
@@ -361,6 +514,7 @@ def run_complete_quantitative_analysis(price_data, df_return):
         'Daily_Return': mean_values,
         'Annual_Return': annualized_return, 
         'Annual_Volatility': annualized_volatility,
+        'RTRR': rtrr,  # Thêm RTRR vào results
         'Sharpe_Ratio': sharpe_ratio,
         'Max_Drawdown': pd.Series(max_drawdowns),
         'VaR_5%': var_historic_5,
@@ -422,6 +576,30 @@ def run_factor_analysis_ew_vs_cw(df_return, price_data):
     print(f"   Cap-Weighted Final Value: {cw_cumulative.iloc[-1]:.4f}")
     print(f"   EW vs CW Outperformance: {(ew_cumulative.iloc[-1]/cw_cumulative.iloc[-1] - 1)*100:.2f}%")
     
+    # 2.4 CW Weights Analysis - 6 mã theo trọng số CW
+    print(f"\n📊 CAP-WEIGHTED WEIGHTS ANALYSIS (6 STOCKS):")
+    cw_weights_series = pd.Series(cw_weights, index=df_return_monthly.columns)
+    cw_weights_sorted = cw_weights_series.sort_values(ascending=False)
+    print(cw_weights_sorted.round(4))
+    
+    # Create CW weights chart
+    plt.figure(figsize=(12, 6))
+    ax = cw_weights_sorted.plot.bar(color='darkblue', alpha=0.7)
+    plt.title('Cap-Weighted Portfolio Weights (6 Stocks)', fontsize=16, fontweight='bold')
+    plt.ylabel('Weight (%)', fontsize=12)
+    plt.xlabel('Stocks', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for i, v in enumerate(cw_weights_sorted.values):
+        ax.text(i, v + 0.005, f'{v:.1%}', 
+                ha='center', va='bottom', fontweight='bold', color='darkblue')
+    
+    plt.tight_layout()
+    plt.savefig('cw_weights_chart.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
     return {
         'ew_weights': ew_weights,
         'cw_weights': cw_weights,
@@ -429,42 +607,192 @@ def run_factor_analysis_ew_vs_cw(df_return, price_data):
         'cw_return': cw_return,
         'ew_cumulative': ew_cumulative,
         'cw_cumulative': cw_cumulative,
-        'performance_comparison': performance_comparison
+        'performance_comparison': performance_comparison,
+        'cw_weights_sorted': cw_weights_sorted
     }
 
+# === COPY Y HỆT PORTFOLIO FUNCTIONS TỪ SAMPLE.PY ===
+
 def portfolio_return(weights, returns):
-    """Tính lợi nhuận của portfolio"""
+    """
+    Tính lợi nhuận danh mục đầu tư
+    weights: Trọng số của các tài sản (list hoặc numpy array)
+    returns: Lợi nhuận kỳ vọng của các tài sản (list, numpy array hoặc pandas Series)
+    """
+    # Ensure weights and returns have the same length
+    if len(weights) != len(returns):
+        raise ValueError("Weights and returns must have the same length.")
     return np.dot(weights, returns)
 
-def portfolio_volatility(weights, cov_matrix):
-    """Tính volatility của portfolio"""
+def portfolio_vol(weights, cov_matrix):
+    """
+    Tính độ lệch chuẩn (volatility) của danh mục đầu tư
+    weights: Trọng số của các tài sản (numpy array)
+    cov_matrix: Ma trận hiệp phương sai (numpy array hoặc pandas DataFrame)
+    """
     return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
 
-def minimize_volatility(target_return, returns, cov_matrix):
-    """Tối thiểu hóa volatility cho target return"""
-    n = returns.shape[0]
+# Alias for compatibility
+def portfolio_volatility(weights, cov_matrix):
+    """Alias cho portfolio_vol để tương thích với code hiện tại"""
+    return portfolio_vol(weights, cov_matrix)
+
+def minimize_vol(target_return, annualized_returns, cov_matrix):
+    """
+    Tìm trọng số tối ưu để đạt được độ biến động nhỏ nhất
+    với lợi nhuận kỳ vọng mục tiêu.
+    """
+    n = annualized_returns.shape[0]
     init_guess = np.repeat(1/n, n)
-    bounds = tuple((0, 1) for _ in range(n))
-    
+    bounds = ((0.0, 1.0),) * n
     weights_sum_to_1 = {'type': 'eq', 'fun': lambda weights: np.sum(weights) - 1}
     return_is_target = {
         'type': 'eq',
-        'args': (returns,),
-        'fun': lambda weights, returns: portfolio_return(weights, returns) - target_return
+        'args': (annualized_returns,),
+        'fun': lambda weights, annualized_returns: portfolio_return(weights, annualized_returns) - target_return
     }
-    
-    result = minimize(portfolio_volatility, init_guess,
-                      args=(cov_matrix,), method='SLSQP',
-                      options={'disp': False},
+    result = minimize(portfolio_vol, init_guess,
+                      args=(cov_matrix,), method="SLSQP",
                       constraints=(weights_sum_to_1, return_is_target),
                       bounds=bounds)
     return result.x
 
 def optimal_weights(n_points, returns, cov_matrix):
-    """Tính trọng số tối ưu cho efficient frontier"""
+    """Tìm các trọng số tối ưu cho nhiều mức lợi nhuận kỳ vọng."""
     target_returns = np.linspace(returns.min(), returns.max(), n_points)
-    weights = [minimize_volatility(tr, returns, cov_matrix) for tr in target_returns]
+    weights = [minimize_vol(tr, returns, cov_matrix) for tr in target_returns]
     return weights
+
+# Alias for compatibility
+def minimize_volatility(target_return, returns, cov_matrix):
+    """Alias cho minimize_vol để tương thích với code hiện tại"""
+    return minimize_vol(target_return, returns, cov_matrix)
+
+# === COPY Y HỆT PERFORMANCE FUNCTIONS TỪ SAMPLE.PY ===
+
+def perf_stats(r):
+    """
+    Tính toán performance statistics giống sample.py
+    """
+    return pd.Series({
+        "Mean": r.mean(),
+        "Volatility": r.std(),
+        "Sharpe": r.mean() / r.std()
+    })
+
+def plot_ef(n_points, er, cov, style='.-', show_cml=False, riskfree_rate=0.0, show_ew=False, show_gmv=False, show_weights=True):
+    """
+    Vẽ Efficient Frontier với tùy chọn thêm Capital Market Line (CML), Equal-Weighted (EW) Portfolio,
+    Global Minimum Variance (GMV) Portfolio, và hiển thị trọng số danh mục.
+    === COPY Y HỆT TỪ SAMPLE.PY ===
+    
+    Parameters:
+    - n_points: Số điểm trên Efficient Frontier.
+    - er: Lợi nhuận kỳ vọng (expected returns) của các tài sản.
+    - cov: Ma trận hiệp phương sai.
+    - style: Kiểu đường đồ thị (ví dụ: '.-', 'x-', v.v.).
+    - show_cml: Hiển thị Capital Market Line (CML) nếu True.
+    - riskfree_rate: Lãi suất phi rủi ro để tính CML.
+    - show_ew: Hiển thị danh mục Equal-Weighted nếu True.
+    - show_gmv: Hiển thị danh mục Global Minimum Variance nếu True.
+    - show_weights: Hiển thị trọng số danh mục nếu True.
+    """
+    # Tìm trọng số tối ưu trên Efficient Frontier
+    weights = optimal_weights(n_points, er, cov)
+    rets = [portfolio_return(w, er) for w in weights]
+    vols = [portfolio_vol(w, cov) for w in weights]
+
+    # Tạo DataFrame chứa kết quả
+    ef = pd.DataFrame({"Returns": rets, "Volatility": vols})
+
+    # Vẽ Efficient Frontier
+    ax = ef.plot.line(x="Volatility", y="Returns", style=style, figsize=(10, 6), title="Efficient Frontier")
+
+    # Nếu hiển thị Capital Market Line
+    if show_cml:
+        sharpe_ratios = (ef["Returns"] - riskfree_rate) / ef["Volatility"]
+        max_sharpe_idx = sharpe_ratios.idxmax()
+        max_sharpe_ret = ef.loc[max_sharpe_idx, "Returns"]
+        max_sharpe_vol = ef.loc[max_sharpe_idx, "Volatility"]
+        w_tangency = weights[max_sharpe_idx]  # Trọng số Tangency Portfolio
+
+        # Vẽ đường CML
+        cml_x = [0, max_sharpe_vol]
+        cml_y = [riskfree_rate, max_sharpe_ret]
+        ax.plot(cml_x, cml_y, color="green", linestyle="--", label="Capital Market Line (CML)")
+        ax.scatter(max_sharpe_vol, max_sharpe_ret, color="red", label="Tangency Portfolio")
+
+        if show_weights:
+            ax.text(max_sharpe_vol + 0.0002, max_sharpe_ret, f"Weights:\n{w_tangency.round(2)}", fontsize=8, color="red")
+
+    # Nếu hiển thị danh mục Equal-Weighted
+    if show_ew:
+        n = er.shape[0]  # Số lượng tài sản
+        w_ew = np.repeat(1/n, n)  # Trọng số đều nhau
+        r_ew = portfolio_return(w_ew, er)  # Lợi nhuận EW
+        vol_ew = portfolio_vol(w_ew, cov)  # Độ biến động EW
+
+        # Vẽ danh mục Equal-Weighted
+        ax.plot([vol_ew], [r_ew], color='goldenrod', marker='o', markersize=10, label="Equal-Weighted Portfolio")
+        if show_weights:
+            ax.text(vol_ew + 0.0002, r_ew, f"Weights:\n{w_ew.round(2)}", fontsize=8, color="goldenrod")
+
+    # Nếu hiển thị GMV Portfolio
+    if show_gmv:
+        n = er.shape[0]
+        jitter = 1e-6  # Giá trị jitter nhỏ
+        cov += np.eye(n) * jitter  # Thêm jitter vào đường chéo ma trận
+        inv_cov = np.linalg.inv(cov)  # Ma trận nghịch đảo
+        ones = np.ones(n)
+        w_gmv = inv_cov @ ones / (ones.T @ inv_cov @ ones)  # Trọng số GMV
+        r_gmv = portfolio_return(w_gmv, er)  # Lợi nhuận GMV
+        vol_gmv = portfolio_vol(w_gmv, cov)  # Độ biến động GMV
+
+        # Vẽ điểm GMV Portfolio
+        ax.plot([vol_gmv], [r_gmv], color='blue', marker='o', markersize=10, label="GMV Portfolio")
+        if show_weights:
+            ax.text(vol_gmv + 0.0002, r_gmv, f"Weights:\n{w_gmv.round(2)}", fontsize=8, color="blue")
+
+    ax.legend()
+    return ax
+
+def display_weights_table(er, cov, riskfree_rate):
+    """
+    Hiển thị trọng số của các danh mục Tangency Portfolio, GMV Portfolio, và Equal-Weighted Portfolio dưới dạng bảng.
+    === COPY Y HỆT TỪ SAMPLE.PY ===
+    
+    Parameters:
+    - er: Lợi nhuận kỳ vọng (expected returns) của các tài sản.
+    - cov: Ma trận hiệp phương sai.
+    - riskfree_rate: Lãi suất phi rủi ro.
+
+    Returns:
+    - DataFrame hiển thị trọng số các danh mục.
+    """
+    # Số lượng tài sản
+    n = er.shape[0]
+
+    # Trọng số Tangency Portfolio
+    jitter = 1e-6
+    cov += np.eye(n) * jitter  # Thêm jitter để đảm bảo ma trận khả nghịch
+    inv_cov = np.linalg.inv(cov)
+    ones = np.ones(n)
+    w_gmv = inv_cov @ ones / (ones.T @ inv_cov @ ones)  # GMV weights
+    sharpe_ratios = (er - riskfree_rate) / np.sqrt(np.diag(cov))
+    tangency_weights = inv_cov @ (er - riskfree_rate) / (ones.T @ inv_cov @ (er - riskfree_rate))
+
+    # Trọng số Equal-Weighted Portfolio
+    w_ew = np.repeat(1/n, n)
+
+    # Tạo bảng trọng số
+    weights_df = pd.DataFrame({
+        "Assets": er.index,
+        "Tangency Portfolio": tangency_weights,
+        "GMV Portfolio": w_gmv,
+        "Equal-Weighted Portfolio": w_ew
+    })
+
+    return weights_df
 
 def run_portfolio_optimization(df_return, riskfree_rate=0.027):
     """
@@ -473,53 +801,32 @@ def run_portfolio_optimization(df_return, riskfree_rate=0.027):
     print(f"\n🔢 STEP 4: PORTFOLIO OPTIMIZATION")
     print("-" * 40)
     
-    # Monthly returns và covariance matrix
-    df_return_monthly = df_return.resample('M').apply(lambda x: (1 + x).prod() - 1)
-    annualized_returns = df_return_monthly.mean() * 12
-    cov_matrix = df_return_monthly.cov() * 12  # Annualized
+    # === TỪ SAMPLE.PY: Tính lợi nhuận hàng năm hóa ===
+    def annualize_rets(r, periods_per_year):
+        """
+        Tính lợi nhuận hàng năm hóa từ dữ liệu tỷ suất sinh lời
+        r: DataFrame hoặc Series chứa tỷ suất sinh lời
+        periods_per_year: Số kỳ trong một năm (250 cho dữ liệu hàng ngày)
+        """
+        compounded_growth = (1 + r).prod()  # Tăng trưởng tích lũy
+        n_periods = r.shape[0]  # Số kỳ
+        return compounded_growth**(periods_per_year / n_periods) - 1
+    
+    # Tính lợi nhuận hàng năm hóa theo sample.py
+    annualized_returns = annualize_rets(df_return, 250)
+    cov_matrix = df_return.cov()  # Không nhân với 250 theo sample.py
     
     print("📊 ANNUALIZED EXPECTED RETURNS:")
     print(annualized_returns.sort_values(ascending=False).round(4))
     
-    # 1. Global Minimum Variance (GMV) Portfolio
-    n = len(annualized_returns)
-    ones = np.ones((n, 1))
-    inv_cov = np.linalg.inv(cov_matrix)
-    gmv_weights = (inv_cov @ ones) / (ones.T @ inv_cov @ ones)
-    gmv_weights = gmv_weights.flatten()
+    # === THEO SAMPLE.PY: Sử dụng display_weights_table ===
+    weights_table = display_weights_table(annualized_returns, cov_matrix, riskfree_rate)
     
-    # 2. Tangency Portfolio (Maximum Sharpe Ratio) - WITH CONSTRAINTS
-    excess_returns = annualized_returns - riskfree_rate
-    
-    # Check if all excess returns are negative
-    if np.all(excess_returns <= 0):
-        print("   ⚠️ All excess returns ≤ 0, using equal weights for Tangency")
-        tangency_weights = np.repeat(1/n, n)
-    else:
-        # Original unconstrained calculation
-        raw_tangency = (inv_cov @ excess_returns) / (ones.T @ inv_cov @ excess_returns)
-        raw_tangency = raw_tangency.flatten()
-        
-        # Apply reasonable constraints: no position > 50%, no short > -20%
-        tangency_weights = np.clip(raw_tangency, -0.2, 0.5)
-        
-        # Renormalize to sum to 1
-        if np.sum(tangency_weights) != 0:
-            tangency_weights = tangency_weights / np.sum(tangency_weights)
-        else:
-            print("   ⚠️ Tangency weights sum to 0, using equal weights")
-            tangency_weights = np.repeat(1/n, n)
-        
-        print(f"   🔧 Tangency: Clipped from extreme values, max={tangency_weights.max():.3f}, min={tangency_weights.min():.3f}")
-    
-    # 3. Equal-Weighted Portfolio
-    ew_weights = np.repeat(1/n, n)
-    
-    # Calculate portfolio metrics
+    # Portfolio weights từ weights_table (theo sample.py)
     portfolios = {
-        'Equal-Weighted': ew_weights,
-        'GMV': gmv_weights,
-        'Tangency': tangency_weights
+        'Equal-Weighted': weights_table["Equal-Weighted Portfolio"].values,
+        'GMV': weights_table["GMV Portfolio"].values,
+        'Tangency': weights_table["Tangency Portfolio"].values
     }
     
     print("\n📊 PORTFOLIO WEIGHTS:")
@@ -530,7 +837,7 @@ def run_portfolio_optimization(df_return, riskfree_rate=0.027):
     performance_metrics = {}
     for name, weights in portfolios.items():
         ret = portfolio_return(weights, annualized_returns)
-        vol = portfolio_volatility(weights, cov_matrix)
+        vol = portfolio_vol(weights, cov_matrix)
         sharpe = (ret - riskfree_rate) / vol if vol > 0 else 0
         
         performance_metrics[name] = {
@@ -544,7 +851,7 @@ def run_portfolio_optimization(df_return, riskfree_rate=0.027):
     n_points = 25
     efficient_weights = optimal_weights(n_points, annualized_returns, cov_matrix)
     efficient_returns = [portfolio_return(w, annualized_returns) for w in efficient_weights]
-    efficient_volatilities = [portfolio_volatility(w, cov_matrix) for w in efficient_weights]
+    efficient_volatilities = [portfolio_vol(w, cov_matrix) for w in efficient_weights]
     
     efficient_frontier = pd.DataFrame({
         'Returns': efficient_returns,
@@ -555,13 +862,455 @@ def run_portfolio_optimization(df_return, riskfree_rate=0.027):
     print(f"   Return range: {min(efficient_returns):.4f} to {max(efficient_returns):.4f}")
     print(f"   Volatility range: {min(efficient_volatilities):.4f} to {max(efficient_volatilities):.4f}")
     
+    # 4.1 RTRR Analysis - THEO SAMPLE.PY
+    print(f"\n📊 RTRR ANALYSIS:")
+    rtrr = annualized_returns / np.sqrt(np.diag(cov_matrix))
+    rtrr_df = pd.DataFrame({
+        'Annualized_Return': annualized_returns,
+        'Volatility': np.sqrt(np.diag(cov_matrix)),
+        'RTRR': rtrr
+    })
+    rtrr_sorted = rtrr_df.sort_values(by='RTRR', ascending=False)
+    print(rtrr_sorted.round(4))
+    
+    # 4.2 RTRR Weights - THEO SAMPLE.PY
+    print(f"\n📊 RTRR WEIGHTS (Portfolio Weights based on RTRR):")
+    rtrr_weights = rtrr / rtrr.sum()
+    rtrr_weights_sorted = rtrr_weights.sort_values(ascending=False)
+    print("Trọng số danh mục theo hiệu suất rủi ro-lợi nhuận:")
+    print(rtrr_weights_sorted.round(4))
+    
+    # Create RTRR weights chart
+    plt.figure(figsize=(14, 6))
+    ax = rtrr_weights_sorted.plot(kind='bar', color='darkgreen', edgecolor='black', alpha=0.7)
+    plt.title('Portfolio Weights based on RTRR (Return-to-Risk Ratio)', fontsize=16, fontweight='bold')
+    plt.ylabel('Weight (%)', fontsize=12)
+    plt.xlabel('Stocks', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for i, v in enumerate(rtrr_weights_sorted.values):
+        ax.text(i, v + 0.01, f'{v:.1%}', 
+                ha='center', va='bottom', fontweight='bold', color='darkgreen')
+    
+    plt.tight_layout()
+    plt.savefig('rtrr_weights_chart.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
     return {
         'portfolios': portfolios,
         'performance_metrics': performance_metrics,
         'efficient_frontier': efficient_frontier,
         'annualized_returns': annualized_returns,
         'cov_matrix': cov_matrix,
-        'weights_df': weights_df
+        'weights_df': weights_df,
+        'weights_table': weights_table,
+        'rtrr_df': rtrr_df,
+        'rtrr_weights': rtrr_weights
+    }
+
+def run_advanced_portfolio_analysis(df_return, price_data, riskfree_rate=0.027):
+    """
+    ADVANCED PORTFOLIO ANALYSIS - THEO SAMPLE.PY
+    Từ phần "Danh mục tối đa hóa Sharpe Ratio" đến hết file sample.py
+    """
+    print(f"\n🚀 ADVANCED PORTFOLIO ANALYSIS")
+    print("=" * 60)
+    
+    # Lấy danh sách tickers thành công
+    successful_tickers = df_return.columns.tolist()
+    
+    # === 1. DANH MỤC TỐI ĐA HÓA SHARPE RATIO ===
+    print(f"\n📊 1. DANH MỤC TỐI ĐA HÓA SHARPE RATIO")
+    print("-" * 40)
+    
+    # Tính lợi nhuận hàng năm hóa
+    def annualize_rets(r, periods_per_year):
+        compounded_growth = (1 + r).prod()
+        n_periods = r.shape[0]
+        return compounded_growth**(periods_per_year / n_periods) - 1
+    
+    annualized_returns = annualize_rets(df_return[successful_tickers], 250)
+    print("Lợi nhuận hàng năm hóa:")
+    print(annualized_returns.sort_values(ascending=False))
+    
+    # Tính ma trận hiệp phương sai
+    cov_matrix = df_return.cov()
+    cov_matrix_subset = cov_matrix.loc[successful_tickers, successful_tickers]
+    
+    # Portfolio weights
+    weights = np.repeat(1/len(successful_tickers), len(successful_tickers))
+    print(f"\nEqual weights: {weights}")
+    
+    # Portfolio return và volatility
+    def portfolio_return(weights, returns):
+        return np.dot(weights, returns)
+    
+    def portfolio_vol(weights, cov_matrix):
+        return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+    
+    port_return = portfolio_return(weights, annualized_returns)
+    port_vol = portfolio_vol(weights, cov_matrix_subset)
+    print(f"Portfolio Return: {port_return:.4f}")
+    print(f"Portfolio Volatility: {port_vol:.4f}")
+    
+    # === 2. EFFICIENT FRONTIER ANALYSIS ===
+    print(f"\n📈 2. EFFICIENT FRONTIER ANALYSIS")
+    print("-" * 40)
+    
+    def minimize_vol(target_return, annualized_returns, cov_matrix):
+        n = annualized_returns.shape[0]
+        init_guess = np.repeat(1/n, n)
+        bounds = ((0.0, 1.0),) * n
+        weights_sum_to_1 = {'type': 'eq', 'fun': lambda weights: np.sum(weights) - 1}
+        return_is_target = {
+            'type': 'eq',
+            'args': (annualized_returns,),
+            'fun': lambda weights, annualized_returns: portfolio_return(weights, annualized_returns) - target_return
+        }
+        result = minimize(portfolio_vol, init_guess,
+                          args=(cov_matrix,), method="SLSQP",
+                          constraints=(weights_sum_to_1, return_is_target),
+                          bounds=bounds)
+        return result.x
+    
+    def optimal_weights(n_points, returns, cov_matrix):
+        target_returns = np.linspace(returns.min(), returns.max(), n_points)
+        weights = [minimize_vol(tr, returns, cov_matrix) for tr in target_returns]
+        return weights
+    
+    # Vẽ Efficient Frontier
+    n_points = 25
+    weights_ef = optimal_weights(n_points, annualized_returns, cov_matrix_subset)
+    rets_ef = [portfolio_return(w, annualized_returns) for w in weights_ef]
+    vols_ef = [portfolio_vol(w, cov_matrix_subset) for w in weights_ef]
+    
+    ef_df = pd.DataFrame({"Returns": rets_ef, "Volatility": vols_ef})
+    
+    plt.figure(figsize=(12, 8))
+    ax = ef_df.plot.line(x="Volatility", y="Returns", style='.-', figsize=(12, 8), 
+                        title="Efficient Frontier - Energy Stocks Portfolio")
+    
+    # Thêm CML và Tangency Portfolio
+    sharpe_ratios = (ef_df["Returns"] - riskfree_rate) / ef_df["Volatility"]
+    max_sharpe_idx = sharpe_ratios.idxmax()
+    max_sharpe_ret = ef_df.loc[max_sharpe_idx, "Returns"]
+    max_sharpe_vol = ef_df.loc[max_sharpe_idx, "Volatility"]
+    
+    # Vẽ CML
+    cml_x = [0, max_sharpe_vol]
+    cml_y = [riskfree_rate, max_sharpe_ret]
+    ax.plot(cml_x, cml_y, color="green", linestyle="--", label="Capital Market Line (CML)")
+    ax.scatter(max_sharpe_vol, max_sharpe_ret, color="red", s=100, label="Tangency Portfolio")
+    
+    # Thêm Equal-Weighted Portfolio
+    n = len(successful_tickers)
+    w_ew = np.repeat(1/n, n)
+    r_ew = portfolio_return(w_ew, annualized_returns)
+    vol_ew = portfolio_vol(w_ew, cov_matrix_subset)
+    ax.plot([vol_ew], [r_ew], color='goldenrod', marker='o', markersize=10, label="Equal-Weighted Portfolio")
+    
+    # Thêm GMV Portfolio
+    jitter = 1e-6
+    cov_jittered = cov_matrix_subset + np.eye(n) * jitter
+    inv_cov = np.linalg.inv(cov_jittered)
+    ones = np.ones(n)
+    w_gmv = inv_cov @ ones / (ones.T @ inv_cov @ ones)
+    r_gmv = portfolio_return(w_gmv, annualized_returns)
+    vol_gmv = portfolio_vol(w_gmv, cov_matrix_subset)
+    ax.plot([vol_gmv], [r_gmv], color='blue', marker='o', markersize=10, label="GMV Portfolio")
+    
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('advanced_efficient_frontier.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    # === 3. PORTFOLIO WEIGHTS TABLE ===
+    print(f"\n📋 3. PORTFOLIO WEIGHTS TABLE")
+    print("-" * 40)
+    
+    def display_weights_table(er, cov, riskfree_rate):
+        n = er.shape[0]
+        jitter = 1e-6
+        cov += np.eye(n) * jitter
+        inv_cov = np.linalg.inv(cov)
+        ones = np.ones(n)
+        w_gmv = inv_cov @ ones / (ones.T @ inv_cov @ ones)
+        tangency_weights = inv_cov @ (er - riskfree_rate) / (ones.T @ inv_cov @ (er - riskfree_rate))
+        w_ew = np.repeat(1/n, n)
+        
+        weights_df = pd.DataFrame({
+            "Assets": er.index,
+            "Tangency Portfolio": tangency_weights,
+            "GMV Portfolio": w_gmv,
+            "Equal-Weighted Portfolio": w_ew
+        })
+        return weights_df
+    
+    weights_table = display_weights_table(annualized_returns, cov_matrix_subset, riskfree_rate)
+    print(weights_table.round(4))
+    
+    # === 4. BACKTEST ANALYSIS ===
+    print(f"\n🔄 4. BACKTEST ANALYSIS")
+    print("-" * 40)
+    
+    def compound(r):
+        return np.expm1(np.log1p(r).sum())
+    
+    # Monthly returns cho backtest
+    df_return_monthly = df_return[successful_tickers].resample('M').apply(compound)
+    
+    # Lấy weights từ table
+    tangency_weights = weights_table["Tangency Portfolio"].values
+    gmv_weights = weights_table["GMV Portfolio"].values
+    ew_weights = weights_table["Equal-Weighted Portfolio"].values
+    
+    # Tính returns cho mỗi portfolio
+    tangency_returns = df_return_monthly @ tangency_weights
+    gmv_returns = df_return_monthly @ gmv_weights
+    ew_returns = df_return_monthly @ ew_weights
+    
+    # Tính wealth index
+    wealth_tangency = (1 + tangency_returns).cumprod() * 1000
+    wealth_gmv = (1 + gmv_returns).cumprod() * 1000
+    wealth_ew = (1 + ew_returns).cumprod() * 1000
+    
+    # Vẽ backtest comparison
+    plt.figure(figsize=(14, 8))
+    wealth_tangency.plot(label='Tangency Portfolio', linewidth=2, color='red')
+    wealth_gmv.plot(label='GMV Portfolio', linewidth=2, color='blue')
+    wealth_ew.plot(label='Equal-Weighted Portfolio', linewidth=2, color='goldenrod')
+    
+    plt.title("Portfolio Backtest Comparison - Energy Stocks", fontsize=16, fontweight='bold')
+    plt.ylabel("Wealth Index (Starting: 1000)", fontsize=12)
+    plt.xlabel("Time", fontsize=12)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('portfolio_backtest_comparison.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    # === 5. PERFORMANCE STATISTICS ===
+    print(f"\n📊 5. PERFORMANCE STATISTICS")
+    print("-" * 40)
+    
+    def perf_stats(r):
+        return pd.Series({
+            "Mean Return": r.mean(),
+            "Volatility": r.std(),
+            "Sharpe": (r.mean() / r.std()) if r.std() > 0 else 0
+        })
+    
+    # Tính performance cho mỗi portfolio
+    result_df = pd.DataFrame({
+        "Tangency": perf_stats(tangency_returns),
+        "GMV": perf_stats(gmv_returns),
+        "Equal-Weighted": perf_stats(ew_returns)
+    }).T
+    
+    print("Monthly Performance Statistics:")
+    print(result_df.round(4))
+    
+    # === 6. RTRR & CAP-WEIGHTED COMPARISON ===
+    print(f"\n⚖️ 6. RTRR & CAP-WEIGHTED COMPARISON")
+    print("-" * 40)
+    
+    # RTRR weights (đã tính ở trên)
+    rtrr = annualized_returns / np.sqrt(np.diag(cov_matrix_subset))
+    rtrr_weights = rtrr / rtrr.sum()
+    
+    # Cap-weighted weights (dùng latest prices)
+    latest_prices = price_data[successful_tickers].iloc[-1]
+    cw_weights = latest_prices / latest_prices.sum()
+    
+    print("RTRR Weights:")
+    print(rtrr_weights.sort_values(ascending=False).round(4))
+    print("\nCap-Weighted Weights:")
+    print(cw_weights.sort_values(ascending=False).round(4))
+    
+    # Tính returns cho RTRR và Cap-Weighted
+    rtrr_returns = df_return_monthly @ rtrr_weights
+    cw_returns = df_return_monthly @ cw_weights
+    
+    wealth_rtrr = (1 + rtrr_returns).cumprod() * 1000
+    wealth_cw = (1 + cw_returns).cumprod() * 1000
+    
+    # Vẽ tất cả 5 portfolios
+    plt.figure(figsize=(14, 8))
+    wealth_tangency.plot(label='Tangency', linewidth=2, color='red')
+    wealth_gmv.plot(label='GMV', linewidth=2, color='blue')
+    wealth_ew.plot(label='Equal-Weighted', linewidth=2, color='goldenrod')
+    wealth_rtrr.plot(label='RTRR', linewidth=2, color='green')
+    wealth_cw.plot(label='Cap-Weighted', linewidth=2, color='purple')
+    
+    plt.title("Complete Portfolio Comparison - 5 Strategies", fontsize=16, fontweight='bold')
+    plt.ylabel("Wealth Index (Starting: 1000)", fontsize=12)
+    plt.xlabel("Time", fontsize=12)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('complete_portfolio_comparison.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    # === 7. FINAL PERFORMANCE SUMMARY ===
+    print(f"\n🏆 7. FINAL PERFORMANCE SUMMARY")
+    print("-" * 40)
+    
+    all_portfolios = {
+        "Tangency": tangency_returns,
+        "GMV": gmv_returns,
+        "Equal-Weighted": ew_returns,
+        "RTRR": rtrr_returns,
+        "Cap-Weighted": cw_returns
+    }
+    
+    stats_df = pd.DataFrame({name: perf_stats(r) for name, r in all_portfolios.items()}).T
+    print("Complete Performance Statistics:")
+    print(stats_df.round(4))
+    
+    # Final wealth values
+    final_wealth = {
+        "Tangency": wealth_tangency.iloc[-1],
+        "GMV": wealth_gmv.iloc[-1],
+        "Equal-Weighted": wealth_ew.iloc[-1],
+        "RTRR": wealth_rtrr.iloc[-1],
+        "Cap-Weighted": wealth_cw.iloc[-1]
+    }
+    
+    print(f"\nFinal Wealth Values (Starting: 1000):")
+    for name, wealth in final_wealth.items():
+        print(f"   {name}: {wealth:.2f}")
+    
+    # === 8. 5-YEAR RETURN & SHARPE SUMMARY OF 6 STOCKS ===
+    print(f"\n📈 8. 5-YEAR RETURN & SHARPE SUMMARY OF 6 STOCKS")
+    print("-" * 50)
+    
+    # Tính annual returns cho 5 năm
+    df_return_yearly = df_return[successful_tickers].resample('Y').apply(compound)
+    
+    # Tính Sharpe ratios cho mỗi năm
+    def calculate_sharpe_ratio(returns, riskfree_rate=0.027):
+        excess_returns = returns - riskfree_rate/250  # Daily risk-free rate
+        return excess_returns.mean() / returns.std() if returns.std() > 0 else 0
+    
+    # Tính annual Sharpe ratios
+    annual_sharpe_ratios = {}
+    for year in df_return_yearly.index.year:
+        year_data = df_return[successful_tickers][df_return.index.year == year]
+        if len(year_data) > 0:
+            annual_sharpe_ratios[year] = year_data.apply(lambda x: calculate_sharpe_ratio(x))
+    
+    sharpe_df = pd.DataFrame(annual_sharpe_ratios).T
+    sharpe_df = sharpe_df.fillna(0)
+    
+    # Tính annual returns
+    annual_returns_df = df_return_yearly.copy()
+    
+    print("Annual Returns Summary:")
+    print(annual_returns_df.round(4))
+    print("\nAnnual Sharpe Ratios Summary:")
+    print(sharpe_df.round(4))
+    
+    # === CHART 1: 5-Year Returns Summary ===
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12))
+    
+    # Returns chart
+    annual_returns_df.plot(kind='bar', ax=ax1, width=0.8, alpha=0.8)
+    ax1.set_title('5-Year Annual Returns Summary - Energy Stocks', fontsize=16, fontweight='bold')
+    ax1.set_ylabel('Annual Return (%)', fontsize=12)
+    ax1.set_xlabel('Year', fontsize=12)
+    ax1.legend(title='Stocks', bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax1.grid(True, alpha=0.3)
+    ax1.axhline(y=0, color='black', linestyle='--', alpha=0.5)
+    
+    # Add value labels on bars
+    for container in ax1.containers:
+        ax1.bar_label(container, fmt='%.1%', rotation=90, fontsize=8)
+    
+    # Sharpe ratios chart
+    sharpe_df.plot(kind='bar', ax=ax2, width=0.8, alpha=0.8, color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'])
+    ax2.set_title('5-Year Annual Sharpe Ratios Summary - Energy Stocks', fontsize=16, fontweight='bold')
+    ax2.set_ylabel('Sharpe Ratio', fontsize=12)
+    ax2.set_xlabel('Year', fontsize=12)
+    ax2.legend(title='Stocks', bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax2.grid(True, alpha=0.3)
+    ax2.axhline(y=0, color='black', linestyle='--', alpha=0.5)
+    
+    # Add value labels on bars
+    for container in ax2.containers:
+        ax2.bar_label(container, fmt='%.2f', rotation=90, fontsize=8)
+    
+    plt.tight_layout()
+    plt.savefig('5year_returns_sharpe_summary.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    # === CHART 2: Heatmap of Returns ===
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(annual_returns_df.T, annot=True, cmap='RdYlGn', center=0, 
+                fmt='.1%', cbar_kws={'label': 'Annual Return'})
+    plt.title('5-Year Returns Heatmap - Energy Stocks', fontsize=16, fontweight='bold')
+    plt.xlabel('Year', fontsize=12)
+    plt.ylabel('Stocks', fontsize=12)
+    plt.tight_layout()
+    plt.savefig('5year_returns_heatmap.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    # === CHART 3: Heatmap of Sharpe Ratios ===
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(sharpe_df.T, annot=True, cmap='RdYlGn', center=0, 
+                fmt='.2f', cbar_kws={'label': 'Sharpe Ratio'})
+    plt.title('5-Year Sharpe Ratios Heatmap - Energy Stocks', fontsize=16, fontweight='bold')
+    plt.xlabel('Year', fontsize=12)
+    plt.ylabel('Stocks', fontsize=12)
+    plt.tight_layout()
+    plt.savefig('5year_sharpe_heatmap.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    # === SUMMARY STATISTICS ===
+    print(f"\n📊 5-YEAR SUMMARY STATISTICS:")
+    print("-" * 40)
+    
+    # Best and worst performers by year
+    for year in annual_returns_df.index.year:
+        year_returns = annual_returns_df[annual_returns_df.index.year == year].iloc[0]
+        best_stock = year_returns.idxmax()
+        worst_stock = year_returns.idxmin()
+        best_return = year_returns.max()
+        worst_return = year_returns.min()
+        
+        print(f"{year}: Best={best_stock} ({best_return:.1%}), Worst={worst_stock} ({worst_return:.1%})")
+    
+    # Overall statistics
+    overall_stats = pd.DataFrame({
+        'Mean Annual Return': annual_returns_df.mean(),
+        'Std Annual Return': annual_returns_df.std(),
+        'Mean Sharpe Ratio': sharpe_df.mean(),
+        'Std Sharpe Ratio': sharpe_df.std(),
+        'Best Year Return': annual_returns_df.max(),
+        'Worst Year Return': annual_returns_df.min(),
+        'Best Year Sharpe': sharpe_df.max(),
+        'Worst Year Sharpe': sharpe_df.min()
+    })
+    
+    print(f"\nOverall 5-Year Statistics:")
+    print(overall_stats.round(4))
+    
+    return {
+        'weights_table': weights_table,
+        'backtest_results': {
+            'tangency_wealth': wealth_tangency,
+            'gmv_wealth': wealth_gmv,
+            'ew_wealth': wealth_ew,
+            'rtrr_wealth': wealth_rtrr,
+            'cw_wealth': wealth_cw
+        },
+        'performance_stats': stats_df,
+        'final_wealth': final_wealth,
+        'annual_returns': annual_returns_df,
+        'annual_sharpe': sharpe_df,
+        'overall_stats': overall_stats
     }
 
 def create_visualization_charts(quant_results, factor_results, portfolio_results, wealth_index, drawdown_data):
@@ -598,7 +1347,26 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     plt.savefig('sharpe_ratio_chart.png', dpi=300, bbox_inches='tight')
     plt.show()
     
-    # 2. Cumulative Wealth Index
+    # 2. RTRR (Return-to-Risk Ratio) Chart - THEO SAMPLE.PY
+    plt.figure(figsize=(12, 6))
+    rtrr_data = quant_results['RTRR'].sort_values(ascending=False)
+    ax = rtrr_data.plot.bar(color='darkgreen', alpha=0.7)
+    plt.title('RTRR (Return-to-Risk Ratio) by Stock', fontsize=16, fontweight='bold')
+    plt.ylabel('RTRR', fontsize=12)
+    plt.xlabel('Stocks', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for i, v in enumerate(rtrr_data.values):
+        ax.text(i, v + 0.01 if v >= 0 else v - 0.01, f'{v:.3f}', 
+                ha='center', va='bottom' if v >= 0 else 'top', fontweight='bold')
+    
+    plt.tight_layout()
+    plt.savefig('rtrr_chart.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    # 3. Cumulative Wealth Index
     plt.figure(figsize=(14, 8))
     for ticker in wealth_index.columns:
         plt.plot(wealth_index.index, wealth_index[ticker], 
@@ -619,10 +1387,9 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     
     for i, (ticker, dd_data) in enumerate(drawdown_data.items()):
         ax = axes[i]
-        ax.fill_between(dd_data.index, dd_data['Drawdown'], 0, 
-                       color='red', alpha=0.3)
+        # CHỈ CÒN ĐƯỜNG VIỀN - BỎ PHẦN FILL ĐỎ NHẠT
         ax.plot(dd_data.index, dd_data['Drawdown'], 
-               color='darkred', linewidth=1)
+               color='darkred', linewidth=2)  # Tăng linewidth để rõ hơn
         ax.set_title(f'{ticker} Drawdown', fontweight='bold')
         ax.set_ylabel('Drawdown %')
         ax.grid(True, alpha=0.3)
@@ -866,8 +1633,18 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     print("✅ All charts saved successfully!")
     print("📊 Charts created:")
     print("   • sharpe_ratio_chart.png")
+    print("   • rtrr_chart.png")  # Thêm RTRR chart
     print("   • wealth_index_chart.png") 
     print("   • drawdown_analysis_chart.png")
+    print("   • minimum_drawdown_chart.png")  # Thêm minimum drawdown chart
+    print("   • cw_weights_chart.png")  # Thêm CW weights chart
+    print("   • rtrr_weights_chart.png")  # Thêm RTRR weights chart
+    print("   • advanced_efficient_frontier.png")  # Thêm advanced efficient frontier
+    print("   • portfolio_backtest_comparison.png")  # Thêm backtest comparison
+    print("   • complete_portfolio_comparison.png")  # Thêm complete portfolio comparison
+    print("   • 5year_returns_sharpe_summary.png")  # Thêm 5-year returns & sharpe summary
+    print("   • 5year_returns_heatmap.png")  # Thêm 5-year returns heatmap
+    print("   • 5year_sharpe_heatmap.png")  # Thêm 5-year sharpe heatmap
     print("   • portfolio_weights_chart.png")
     print("   • efficient_frontier_chart.png")
     print("   • equal_weighted_performance_chart.png")
@@ -1235,7 +2012,12 @@ def predict_future_with_real_data(models_dict, X_columns, quarterly_financial_da
                 (company_factors['market_position'] - 1.0) * 0.1 # Market position effect
             )
             
-            # Add realistic randomness (±30% variation around prediction)
+            # Add realistic randomness (±30% variation around prediction) - FIXED SEED
+            # Tạo seed cố định cho mỗi ticker + year để consistent
+            ticker_seeds = {'PLX': 1, 'OIL': 2, 'GAS': 3, 'PPC': 4, 'GEG': 5, 'POW': 6}
+            year_seeds = {2026: 10, 2027: 20, 2028: 30, 2029: 40, 2030: 50}
+            fixed_seed = ticker_seeds[ticker] + year_seeds[year]
+            np.random.seed(fixed_seed)
             random_variation = np.random.normal(0, abs(predicted_return) * 0.3)
             predicted_return += random_variation
             
@@ -1340,6 +2122,14 @@ def main():
     
     print(f"\n📊 Data shape: Price {price_data.shape}, Returns {df_return.shape}")
     
+    # === INDIVIDUAL STOCK ANALYSIS ===
+    print(f"\n🔍 INDIVIDUAL STOCK PERFORMANCE ANALYSIS")
+    print("=" * 60)
+    
+    individual_stats = {}
+    for ticker in successful_tickers:
+        individual_stats[ticker] = analyze_individual_stock_performance(df_return, price_data, ticker)
+    
     # 5. Complete Quantitative Analysis
     print(f"\n📊 CHẠY QUANTITATIVE FLOW ANALYSIS HOÀN CHỈNH:")
     print("=" * 70)
@@ -1352,6 +2142,9 @@ def main():
     
     # Step 4: Portfolio Optimization
     portfolio_results = run_portfolio_optimization(df_return, riskfree_rate=0.027)
+    
+    # Step 4.5: Advanced Portfolio Analysis (theo sample.py)
+    advanced_results = run_advanced_portfolio_analysis(df_return, price_data, riskfree_rate=0.027)
     
     # Step 5: Create Visualization Charts
     create_visualization_charts(quant_results, factor_results, portfolio_results, wealth_index, drawdown_data)
