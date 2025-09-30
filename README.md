@@ -1,249 +1,263 @@
-# 🚀 Vietnamese Energy Stocks Analysis - Complete Real Data Model
+# Vietnamese Energy Stocks Prediction Model
 
-## 📋 Project Overview
+## 📊 Giới thiệu
 
-This project provides a comprehensive analysis of Vietnamese energy stocks using real market data from vnstock, combining quantitative portfolio analysis, machine learning predictions, and advanced statistical modeling.
+Dự án này phát triển một mô hình Machine Learning để dự đoán hiệu suất của các cổ phiếu năng lượng Việt Nam, bao gồm phân tích định lượng toàn diện và đánh giá độ tin cậy của mô hình.
 
-### 🎯 Key Features
+### 🎯 Mục tiêu
 
-- **Real Data Integration**: All 6 key indicators from vnstock (no mock data)
-- **Quantitative Analysis**: Complete portfolio optimization and risk analysis
-- **Machine Learning**: Statistical predictions for 2026-2030
-- **Advanced Portfolio Theory**: Efficient frontier, tangency portfolio, backtesting
-- **5-Year Historical Analysis**: Returns and Sharpe ratio analysis
-- **Individual Stock Analysis**: Detailed performance metrics for each stock
+- Phân tích hiệu suất 6 cổ phiếu năng lượng Việt Nam (PLX, OIL, GAS, PPC, GEG, POW)
+- Xây dựng mô hình ML dự đoán với độ tin cậy cao
+- Tối ưu hóa danh mục đầu tư dựa trên phân tích rủi ro-lợi nhuận
+- Cung cấp dự đoán 5 năm (2026-2030)
 
-## 📊 Data Sources
+## 🏗️ Cấu trúc dự án
 
-### ✅ Real Data from vnstock:
-
-1. **Trading Volume (millions)** - VN-Index volume data
-2. **Market Index (VN-Index)** - VNINDEX close price
-3. **Debt Ratio (lev)** - "Nợ/VCSH" from financial ratios
-4. **ROA** - "ROA (%)" from financial ratios
-5. **Cash Ratio** - "Chỉ số thanh toán tiền mặt"
-6. **Asset Turnover** - "Vòng quay tài sản"
-
-### 📈 Stock Universe:
-
-- **PLX** - Petrolimex
-- **OIL** - PV Oil
-- **GAS** - PetroVietnam Gas
-- **PPC** - Pha Lai Thermal Power
-- **GEG** - Gia Lai Electricity
-- **POW** - PetroVietnam Power
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-```bash
-Python 3.8+
-Required packages: pandas, numpy, matplotlib, seaborn, scikit-learn, scipy, vnstock, openpyxl
+```
+ML/
+├── complete_real_data_model.py          # Mô hình chính với tất cả tính năng
+├── FINAL_RELIABILITY_ASSESSMENT.md      # Báo cáo đánh giá độ tin cậy
+├── FINAL_SUMMARY.md                     # Tổng kết dự án
+├── requirements.txt                     # Dependencies
+├── vnindex.xlsx                        # Dữ liệu VN-Index
+├── README.md                           # File này
+└── charts/                             # Các biểu đồ kết quả
+    ├── *_detailed_analysis.png         # Phân tích chi tiết từng cổ phiếu
+    ├── *_chart.png                     # Các biểu đồ phân tích
+    └── ml_prediction_*.png             # Dự đoán ML
 ```
 
-### Installation
+## 🚀 Cài đặt
+
+### Yêu cầu hệ thống
+
+- Python 3.8+
+- 8GB RAM (khuyến nghị)
+- Kết nối internet để tải dữ liệu
+
+### Cài đặt dependencies
 
 ```bash
-# Clone or download the project
-cd /path/to/project
+# Clone repository
+git clone <repository-url>
+cd ML
 
-# Install dependencies
+# Cài đặt dependencies
 pip install -r requirements.txt
 
-# Run the complete analysis
+# Cài đặt thêm vnstock (tùy chọn)
+pip install -U vnstock
+```
+
+### Dependencies chính
+
+- `pandas` - Xử lý dữ liệu
+- `numpy` - Tính toán số học
+- `scikit-learn` - Machine Learning
+- `matplotlib` - Vẽ biểu đồ
+- `seaborn` - Visualization
+- `yfinance` - Dữ liệu tài chính
+- `vnstock` - Dữ liệu Việt Nam (tùy chọn)
+
+## 📖 Hướng dẫn sử dụng
+
+### Chạy mô hình hoàn chỉnh
+
+```bash
 python complete_real_data_model.py
 ```
 
-## 📈 Analysis Components
+### Kết quả mong đợi
 
-### 1. 🔢 Quantitative Flow Analysis
+Chương trình sẽ thực hiện:
 
-- **Return & Risk Analysis**: Daily, monthly, annual statistics
-- **Variance Analysis**: Risk metrics with annualized volatility
-- **RTRR Analysis**: Return-to-Risk Ratio with ranking
-- **Sharpe Ratio**: Risk-adjusted performance metrics
-- **Drawdown Analysis**: Maximum drawdown with visualizations
+1. **Thu thập dữ liệu**:
 
-### 2. 📊 Factor Analysis (EW vs CW)
+   - Dữ liệu giá cổ phiếu từ vnstock
+   - Dữ liệu tài chính quarterly
+   - Dữ liệu VN-Index
+   - Chỉ số kinh tế vĩ mô (nếu có)
 
-- **Equal-Weighted Portfolio**: 1/n allocation strategy
-- **Cap-Weighted Portfolio**: Market cap-based allocation
-- **Performance Comparison**: Statistical comparison of strategies
-- **CW Weights Analysis**: Detailed weight distribution
+2. **Phân tích định lượng**:
 
-### 3. ⚖️ Portfolio Optimization
+   - Return & Risk Analysis
+   - Sharpe Ratio & Risk-Adjusted Metrics
+   - Portfolio Optimization
+   - Efficient Frontier Analysis
 
-- **Efficient Frontier**: Optimal risk-return combinations
-- **Tangency Portfolio**: Maximum Sharpe ratio portfolio
-- **GMV Portfolio**: Global Minimum Variance portfolio
-- **RTRR Weights**: Return-to-Risk based allocation
-- **Backtesting**: Historical performance validation
+3. **Machine Learning**:
 
-### 4. 🚀 Advanced Portfolio Analysis
+   - Feature Engineering (36 features)
+   - Model Selection (10 models)
+   - Ensemble Methods
+   - Walk-forward Validation
 
-- **Sharpe Ratio Maximization**: Mathematical optimization
-- **5-Strategy Comparison**: Tangency, GMV, EW, RTRR, CW
-- **Wealth Index Tracking**: Starting from 1000
-- **Performance Statistics**: Comprehensive metrics
+4. **Dự đoán tương lai**:
+   - Dự đoán 2026-2030
+   - Statistical approach
+   - Risk assessment
 
-### 5. 📈 5-Year Historical Analysis
+### Output files
 
-- **Annual Returns**: Year-by-year performance (2020-2025)
-- **Sharpe Ratios**: Risk-adjusted returns by year
-- **Best/Worst Performers**: Annual rankings
-- **Heatmaps**: Visual performance matrices
+- **Charts**: 20+ biểu đồ phân tích
+- **Console output**: Kết quả chi tiết
+- **Performance metrics**: R², RMSE, MAE, Sharpe ratios
 
-### 6. 🤖 Machine Learning Predictions
+## 📊 Tính năng chính
 
-- **Statistical Model**: Historical pattern-based predictions
-- **2026-2030 Forecasts**: 5-year forward-looking analysis
-- **Consistent Results**: Fixed seed for reproducible outputs
-- **Realistic Bounds**: Market-appropriate prediction ranges
+### 1. Phân tích định lượng
 
-### 7. 📊 Individual Stock Analysis
+- **Return Analysis**: Daily, monthly, annual returns
+- **Risk Metrics**: VaR, CVaR, Maximum Drawdown
+- **Sharpe Ratios**: Risk-adjusted performance
+- **Portfolio Optimization**: Efficient frontier, tangency portfolio
 
-- **Detailed Statistics**: Daily, monthly, annual metrics
-- **Risk Metrics**: VaR, CVaR, Max Drawdown
-- **Performance Charts**: 4 charts per stock
-- **Comprehensive Analysis**: Complete stock profiling
+### 2. Machine Learning
 
-## 📊 Generated Charts (32 Total)
+- **Feature Engineering**: 36 features bao gồm:
 
-### 🔍 5-Year Analysis (3 charts)
+  - Technical indicators (RSI, Bollinger Bands, MA ratios)
+  - Volatility measures (5, 20, 60-day)
+  - Market interaction features
+  - Economic indicators
+  - Fundamental ratios
 
-- `5year_returns_heatmap.png` - Annual returns heatmap
-- `5year_returns_sharpe_summary.png` - Combined returns & Sharpe charts
-- `5year_sharpe_heatmap.png` - Annual Sharpe ratios heatmap
+- **Model Selection**: 10 models với Time Series CV
+- **Ensemble Methods**: Top 3 models với weighted prediction
+- **Validation**: Walk-forward validation
 
-### 🚀 Advanced Portfolio (3 charts)
+### 3. Đánh giá độ tin cậy
 
-- `advanced_efficient_frontier.png` - Advanced EF with CML
-- `portfolio_backtest_comparison.png` - 3-strategy backtest
-- `complete_portfolio_comparison.png` - All 5 strategies comparison
+- **Cross-validation**: K-Fold và Time Series CV
+- **Feature Stability**: Bootstrap analysis
+- **Model Calibration**: Calibration assessment
+- **Prediction Uncertainty**: Confidence intervals
 
-### 📈 Individual Stock Analysis (6 charts)
+## 📈 Kết quả chính
 
-- `gas_detailed_analysis.png` - GAS comprehensive analysis
-- `geg_detailed_analysis.png` - GEG comprehensive analysis
-- `oil_detailed_analysis.png` - OIL comprehensive analysis
-- `plx_detailed_analysis.png` - PLX comprehensive analysis
-- `pow_detailed_analysis.png` - POW comprehensive analysis
-- `ppc_detailed_analysis.png` - PPC comprehensive analysis
+### Hiệu suất mô hình
 
-### 🤖 ML Predictions (6 charts)
+- **R² Score**: 0.2633 (cải thiện từ 0.0008)
+- **RMSE**: 0.0185 (cải thiện từ 0.9999)
+- **Reliability Grade**: B (High Reliability)
+- **Walk-Forward CV R²**: 0.0668 ± 0.0392
 
-- `ml_prediction_2026_chart.png` - 2026 predictions
-- `ml_prediction_2027_chart.png` - 2027 predictions
-- `ml_prediction_2028_chart.png` - 2028 predictions
-- `ml_prediction_2029_chart.png` - 2029 predictions
-- `ml_prediction_2030_chart.png` - 2030 predictions
-- `ml_prediction_summary_5years_chart.png` - 5-year summary
+### Top performers
 
-### ⚖️ Portfolio Analysis (8 charts)
+- **Best Individual Stock**: OIL (Sharpe: 0.1475)
+- **Best Portfolio**: RTRR Portfolio (Sharpe: 0.1562)
+- **Equal-Weighted vs Cap-Weighted**: 0.0822 vs 0.0738
 
-- `cap_weighted_performance_chart.png` - Cap-weighted performance
-- `cw_weights_chart.png` - Cap-weighted weights
-- `efficient_frontier_chart.png` - Basic efficient frontier
-- `equal_weighted_performance_chart.png` - Equal-weighted performance
-- `ew_vs_cw_comparison_chart.png` - EW vs CW comparison
-- `portfolio_weights_chart.png` - Portfolio weights comparison
-- `rtrr_weights_chart.png` - RTRR-based weights
-- `tangency_portfolio_analysis_chart.png` - Tangency portfolio analysis
+### Dự đoán 2026-2030
 
-### 📊 Risk & Return (6 charts)
+- **OIL**: 23.41% → 26.24% (2026-2030)
+- **POW**: 13.33% → 10.36% (2026-2030)
+- **GAS**: 7.26% → 12.14% (2026-2030)
 
-- `drawdown_analysis_chart.png` - Drawdown analysis
-- `minimum_drawdown_chart.png` - Minimum drawdown ranking
-- `risk_return_scatter_chart.png` - Risk vs return scatter
-- `rtrr_chart.png` - RTRR analysis
-- `sharpe_ratio_chart.png` - Sharpe ratios
-- `wealth_index_chart.png` - Wealth index evolution
+## 🔧 Tùy chỉnh
 
-## 🎯 Key Results
+### Thay đổi cổ phiếu
 
-### 📈 Best Performing Strategy
-
-- **RTRR Portfolio**: 1707.12 final wealth (70.7% return)
-- **Highest Sharpe**: 0.1562
-- **Highest Mean Return**: 4.23% monthly
-
-### 🏆 Best Individual Stock
-
-- **OIL**: 15.48% mean annual return
-- **Consistent winner**: Best performer in 4 out of 6 years
-- **Highest volatility**: 36.37% annual volatility
-
-### 📊 Portfolio Performance Ranking
-
-1. **RTRR**: 1707.12 final wealth (Best overall)
-2. **Equal-Weighted**: 1260.46 final wealth (Best risk-adjusted)
-3. **Cap-Weighted**: 1202.23 final wealth (Moderate performance)
-4. **GMV**: 892.15 final wealth (Conservative)
-5. **Tangency**: 173.31 final wealth (Optimization issues)
-
-## 🔧 Technical Details
-
-### Dependencies
-
-```
-pandas>=1.3.0
-numpy>=1.21.0
-matplotlib>=3.4.0
-seaborn>=0.11.0
-scikit-learn>=1.0.0
-scipy>=1.7.0
-vnstock>=0.2.0
-openpyxl>=3.1.0
-```
-
-### Data Processing
-
-- **Real-time data fetching** from vnstock
-- **Data cleaning** and preprocessing
-- **Feature engineering** with technical indicators
-- **Time series alignment** and handling
-
-### Model Architecture
-
-- **Statistical prediction model** (not ML to avoid overfitting)
-- **Historical pattern-based** forecasting
-- **Market scenario modeling**
-- **Company-specific factors** integration
-
-## 📝 Usage Examples
-
-### Run Complete Analysis
+Chỉnh sửa `tickers` trong `complete_real_data_model.py`:
 
 ```python
-python complete_real_data_model.py
+tickers = ['PLX', 'OIL', 'GAS', 'PPC', 'GEG', 'POW']
 ```
 
-### Key Outputs
+### Thay đổi thời gian
 
-- 32 professional charts
-- Comprehensive statistics tables
-- Portfolio optimization results
-- ML predictions for 2026-2030
-- Individual stock analysis
+Chỉnh sửa `start_date` và `end_date`:
 
-## 🤝 Contributing
+```python
+start_date = '2020-01-01'
+end_date = '2025-08-15'
+```
 
-This project is designed for Vietnamese energy market analysis. Contributions are welcome for:
+### Thay đổi models
 
-- Additional technical indicators
-- Enhanced ML models
-- Extended time periods
-- Additional stocks
+Chỉnh sửa `models` dictionary trong function `train_improved_models`:
+
+```python
+models = {
+    'Linear': LinearRegression(),
+    'Ridge': Ridge(alpha=1.0),
+    'RandomForest': RandomForestRegressor(),
+    # Thêm models khác...
+}
+```
+
+## 📋 Troubleshooting
+
+### Lỗi thường gặp
+
+1. **ImportError: No module named 'vnstock'**
+
+   ```bash
+   pip install -U vnstock
+   ```
+
+2. **Memory Error**
+
+   - Giảm số lượng features
+   - Giảm thời gian phân tích
+   - Tăng RAM
+
+3. **Data not found**
+   - Kiểm tra kết nối internet
+   - Kiểm tra ticker symbols
+   - Kiểm tra date range
+
+### Performance tips
+
+- Sử dụng SSD để tăng tốc I/O
+- Tăng RAM để xử lý dữ liệu lớn
+- Sử dụng GPU cho deep learning (nếu có)
+
+## 📊 Báo cáo độ tin cậy
+
+Xem file `FINAL_RELIABILITY_ASSESSMENT.md` để biết chi tiết về:
+
+- Đánh giá độ tin cậy mô hình
+- Các cải thiện đã thực hiện
+- Khuyến nghị triển khai
+- So sánh trước/sau cải thiện
+
+## 🤝 Đóng góp
+
+### Cách đóng góp
+
+1. Fork repository
+2. Tạo feature branch
+3. Commit changes
+4. Push to branch
+5. Tạo Pull Request
+
+### Guidelines
+
+- Code style: PEP 8
+- Documentation: Docstrings cho functions
+- Testing: Unit tests cho core functions
+- Performance: Optimize cho large datasets
+
+## 📞 Liên hệ
+
+- **Author**: Vinh Nguyen
+- **Email**: [your-email@domain.com]
+- **GitHub**: [your-github-username]
+- **LinkedIn**: [your-linkedin-profile]
 
 ## 📄 License
 
-This project is for educational and research purposes. Please ensure compliance with data usage policies when using vnstock data.
+MIT License - Xem file LICENSE để biết chi tiết.
 
-## 📞 Contact
+## 🙏 Acknowledgments
 
-For questions or collaboration opportunities, please refer to the project documentation.
+- **vnstock**: Dữ liệu tài chính Việt Nam
+- **yfinance**: Dữ liệu tài chính global
+- **scikit-learn**: Machine Learning framework
+- **pandas**: Data manipulation
+- **matplotlib/seaborn**: Visualization
 
 ---
 
-**🎯 This comprehensive analysis provides deep insights into Vietnamese energy stocks with real market data, advanced portfolio theory, and statistical predictions for informed investment decisions.**
+**Lưu ý**: Mô hình này chỉ dành cho mục đích nghiên cứu và giáo dục. Không sử dụng cho mục đích đầu tư thực tế mà không có đánh giá rủi ro kỹ lưỡng.

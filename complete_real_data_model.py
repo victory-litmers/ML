@@ -127,6 +127,153 @@ def get_quarterly_financial_timeseries(ticker, start_date='2020-01-01', end_date
         print(f"   ❌ {ticker}: Lỗi {str(e)}")
         return None
 
+def get_economic_indicators(start_date='2020-01-01', end_date='2025-08-15'):
+    """
+    Lấy các chỉ số kinh tế vĩ mô từ Vnstock (dữ liệu thực Việt Nam)
+    """
+    try:
+        print("📊 Lấy Economic Indicators từ Vnstock (dữ liệu thực Việt Nam)...")
+        
+        # Import Vnstock
+        try:
+            from vnstock_data import Macro
+        except ImportError:
+            try:
+                from vnstock import Macro
+            except ImportError:
+                print("   ⚠️ Vnstock not available, using yfinance only")
+                return None
+        
+        # Tạo date range
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+        
+        # Khởi tạo đối tượng Macro
+        macro = Macro(source='mbk')
+        
+        indicators = {}
+        
+        # 1. GDP (theo quý)
+        try:
+            print("   📈 Lấy GDP data...")
+            df_gdp = macro.gdp(start="2020-01", end="2025-04", period="quarter")
+            if not df_gdp.empty:
+                # Convert quarterly to daily (forward fill)
+                df_gdp_daily = df_gdp.reindex(date_range, method='ffill')
+                indicators['GDP'] = df_gdp_daily.iloc[:, 0]  # First column
+                print("   ✅ GDP data loaded")
+        except Exception as e:
+            print(f"   ⚠️ GDP not available: {str(e)}")
+        
+        # 2. CPI (theo tháng)
+        try:
+            print("   📈 Lấy CPI data...")
+            df_cpi = macro.cpi(start="2020-01", end="2025-04", period="month")
+            if not df_cpi.empty:
+                # Convert monthly to daily (forward fill)
+                df_cpi_daily = df_cpi.reindex(date_range, method='ffill')
+                indicators['CPI'] = df_cpi_daily.iloc[:, 0]  # First column
+                print("   ✅ CPI data loaded")
+        except Exception as e:
+            print(f"   ⚠️ CPI not available: {str(e)}")
+        
+        # 3. Sản xuất công nghiệp (theo tháng)
+        try:
+            print("   📈 Lấy Industrial Production data...")
+            df_ip = macro.industry_prod(start="2020-01", end="2025-04", period="month")
+            if not df_ip.empty:
+                # Convert monthly to daily (forward fill)
+                df_ip_daily = df_ip.reindex(date_range, method='ffill')
+                indicators['Industrial_Production'] = df_ip_daily.iloc[:, 0]  # First column
+                print("   ✅ Industrial Production data loaded")
+        except Exception as e:
+            print(f"   ⚠️ Industrial Production not available: {str(e)}")
+        
+        # 4. Lãi suất cơ bản (nếu có)
+        try:
+            print("   📈 Lấy Interest Rate data...")
+            df_ir = macro.interest_rate(start="2020-01", end="2025-04", period="month")
+            if not df_ir.empty:
+                df_ir_daily = df_ir.reindex(date_range, method='ffill')
+                indicators['Interest_Rate'] = df_ir_daily.iloc[:, 0]
+                print("   ✅ Interest Rate data loaded")
+        except Exception as e:
+            print(f"   ⚠️ Interest Rate not available: {str(e)}")
+        
+        # 5. Tỷ giá USD/VND (nếu có)
+        try:
+            print("   📈 Lấy Exchange Rate data...")
+            df_fx = macro.exchange_rate(start="2020-01", end="2025-04", period="month")
+            if not df_fx.empty:
+                df_fx_daily = df_fx.reindex(date_range, method='ffill')
+                indicators['USD_VND'] = df_fx_daily.iloc[:, 0]
+                print("   ✅ Exchange Rate data loaded")
+        except Exception as e:
+            print(f"   ⚠️ Exchange Rate not available: {str(e)}")
+        
+        # 6. Dự trữ ngoại hối (nếu có)
+        try:
+            print("   📈 Lấy Foreign Reserves data...")
+            df_fr = macro.foreign_reserves(start="2020-01", end="2025-04", period="month")
+            if not df_fr.empty:
+                df_fr_daily = df_fr.reindex(date_range, method='ffill')
+                indicators['Foreign_Reserves'] = df_fr_daily.iloc[:, 0]
+                print("   ✅ Foreign Reserves data loaded")
+        except Exception as e:
+            print(f"   ⚠️ Foreign Reserves not available: {str(e)}")
+        
+        # 7. Thêm global indicators từ yfinance (backup)
+        try:
+            print("   📈 Lấy Global indicators từ yfinance...")
+            
+            # Oil Price (WTI) - quan trọng cho energy stocks
+            oil = yf.download('CL=F', start=start_date, end=end_date, progress=False)
+            if not oil.empty:
+                indicators['Oil_Price'] = oil['Close']
+                print("   ✅ Oil Price (WTI)")
+            
+            # Gold Price - safe haven asset
+            gold = yf.download('GC=F', start=start_date, end=end_date, progress=False)
+            if not gold.empty:
+                indicators['Gold_Price'] = gold['Close']
+                print("   ✅ Gold Price")
+            
+            # US 10-Year Treasury Yield - risk-free rate
+            treasury = yf.download('^TNX', start=start_date, end=end_date, progress=False)
+            if not treasury.empty:
+                indicators['US_10Y_Yield'] = treasury['Close']
+                print("   ✅ US 10Y Treasury Yield")
+            
+            # VIX - Market volatility
+            vix = yf.download('^VIX', start=start_date, end=end_date, progress=False)
+            if not vix.empty:
+                indicators['VIX'] = vix['Close']
+                print("   ✅ VIX (Market Volatility)")
+                
+        except Exception as e:
+            print(f"   ⚠️ Global indicators error: {str(e)}")
+        
+        if indicators:
+            # Combine all indicators
+            econ_df = pd.DataFrame(indicators)
+            econ_df.index = pd.to_datetime(econ_df.index)
+            
+            # Forward fill missing values
+            econ_df = econ_df.fillna(method='ffill')
+            
+            # Reindex to match date range
+            econ_df = econ_df.reindex(date_range, method='ffill')
+            
+            print(f"   ✅ Economic indicators: {econ_df.shape}")
+            print(f"   📊 Available indicators: {list(econ_df.columns)}")
+            return econ_df
+        else:
+            print("   ❌ No economic indicators available")
+            return None
+            
+    except Exception as e:
+        print(f"   ❌ Economic indicators error: {str(e)}")
+        return None
+
 def get_vnindex_real_data(start_date='2020-01-01', end_date='2025-08-15'):
     """
     Lấy dữ liệu VN-Index từ file vnindex.xlsx - 1. Volume, 2. Market Index (Close)
@@ -1800,26 +1947,28 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
         print(f"   • ml_prediction_{year}_chart.png")
     print("   • ml_prediction_summary_5years_chart.png")
 
-def create_complete_real_features(price_data, df_return, vnindex_data, quarterly_financial_data):
+def create_complete_real_features(price_data, df_return, vnindex_data, quarterly_financial_data, economic_data=None):
     """
-    IMPROVED Feature Engineering - Tránh overfitting & data leakage
-    - Simplified features (giảm từ 30+ xuống 15 features quan trọng)
-    - Proper lagging (all features lagged)
-    - Balanced target (winsorization + normalization)
+    ENHANCED Feature Engineering - Cải thiện đáng kể dựa trên đánh giá độ tin cậy
+    - Technical indicators (RSI, Bollinger Bands, MACD)
+    - Multiple volatility measures
+    - Market interaction features
+    - Robust target preprocessing
+    - Better feature selection
     """
     features_list = []
     targets_list = []
     
-    print(f"\n🔧 BUILDING SIMPLIFIED FEATURES - ANTI-OVERFITTING...")
+    print(f"\n🔧 BUILDING ENHANCED FEATURES - IMPROVED RELIABILITY...")
     
     for ticker in price_data.columns:
-        print(f"🔧 Processing {ticker}...")
+        print(f"🔧 Processing {ticker} with enhanced features...")
         
         prices = price_data[ticker].dropna()
         returns = df_return[ticker].dropna()
         
         common_dates = prices.index.intersection(returns.index)
-        if len(common_dates) < 100:
+        if len(common_dates) < 200:  # Tăng yêu cầu minimum data
             print(f"   ⚠️ {ticker}: Insufficient data ({len(common_dates)} days)")
             continue
             
@@ -1828,40 +1977,85 @@ def create_complete_real_features(price_data, df_return, vnindex_data, quarterly
         
         features_df = pd.DataFrame(index=common_dates)
         
-        # === SIMPLIFIED FEATURES - CHỈ GIỮ FEATURES QUAN TRỌNG ===
+        # === ENHANCED FEATURES ===
         
-        # 1. Recent returns (lag 1, 5 only - giảm từ 4 xuống 2)
+        # 1. Technical Indicators
+        # RSI (Relative Strength Index)
+        def calculate_rsi(prices, window=14):
+            delta = prices.diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+            rs = gain / loss
+            rsi = 100 - (100 / (1 + rs))
+            return rsi
+        
+        features_df['RSI_14'] = calculate_rsi(prices).shift(1)
+        features_df['RSI_30'] = calculate_rsi(prices, 30).shift(1)
+        
+        # Moving Average Ratios
+        features_df['MA_5_20_Ratio'] = (prices.rolling(5).mean() / prices.rolling(20).mean()).shift(1)
+        features_df['MA_10_50_Ratio'] = (prices.rolling(10).mean() / prices.rolling(50).mean()).shift(1)
+        
+        # Bollinger Bands
+        bb_window = 20
+        bb_std = 2
+        bb_middle = prices.rolling(bb_window).mean()
+        bb_std_val = prices.rolling(bb_window).std()
+        bb_upper = bb_middle + (bb_std_val * bb_std)
+        bb_lower = bb_middle - (bb_std_val * bb_std)
+        
+        features_df['BB_Position'] = ((prices - bb_lower) / (bb_upper - bb_lower)).shift(1)
+        features_df['BB_Width'] = ((bb_upper - bb_lower) / bb_middle).shift(1)
+        
+        # 2. Volatility Features (Enhanced)
+        features_df['Volatility_5'] = returns.rolling(5).std().shift(1)
+        features_df['Volatility_20'] = returns.rolling(20).std().shift(1)
+        features_df['Volatility_60'] = returns.rolling(60).std().shift(1)
+        
+        # Volatility ratio
+        features_df['Vol_Ratio_5_20'] = features_df['Volatility_5'] / features_df['Volatility_20']
+        
+        # 3. Return Features (Enhanced)
         features_df['Return_Lag1'] = returns.shift(1)
         features_df['Return_Lag5'] = returns.shift(5)
+        features_df['Return_Lag10'] = returns.shift(10)
         
-        # 2. Volatility (chỉ 20-day)
-        features_df['Volatility_20'] = returns.rolling(20).std().shift(1)
+        # Return momentum
+        features_df['Return_Momentum_5'] = returns.rolling(5).mean().shift(1)
+        features_df['Return_Momentum_20'] = returns.rolling(20).mean().shift(1)
         
-        # 3. Price momentum (MA ratio)
-        features_df['Price_MA_Ratio'] = (prices / prices.rolling(20).mean()).shift(1)
-        
-        # 4. VN-Index features (SIMPLIFIED)
+        # 4. Market Features (Enhanced)
         if vnindex_data is not None:
             aligned_vnindex = vnindex_data.reindex(common_dates, method='ffill')
             
-            # Market return & volatility
+            # Market returns
             vn_returns = aligned_vnindex['Close'].pct_change()
             features_df['Market_Return'] = vn_returns.shift(1)
-            features_df['Market_Volatility'] = vn_returns.rolling(20).std().shift(1)
+            features_df['Market_Return_5'] = vn_returns.rolling(5).mean().shift(1)
             
-            # Volume (millions)
+            # Market volatility
+            features_df['Market_Volatility'] = vn_returns.rolling(20).std().shift(1)
+            features_df['Market_Volatility_60'] = vn_returns.rolling(60).std().shift(1)
+            
+            # Volume features
             volume_millions = aligned_vnindex['Volume'] / 1_000_000
             features_df['Market_Volume'] = volume_millions.shift(1)
+            features_df['Market_Volume_MA'] = volume_millions.rolling(20).mean().shift(1)
+            features_df['Volume_Ratio'] = volume_millions / volume_millions.rolling(20).mean()
+            features_df['Volume_Ratio'] = features_df['Volume_Ratio'].shift(1)
+            
+            # Market trend
+            features_df['Market_Trend_20'] = (aligned_vnindex['Close'] / aligned_vnindex['Close'].rolling(20).mean()).shift(1)
         else:
             print(f"   ❌ {ticker}: VN-Index required!")
             continue
         
-        # 5. Quarterly financial (CORE 4 metrics only)
+        # 5. Fundamental Features (Enhanced)
         if ticker in quarterly_financial_data and quarterly_financial_data[ticker] is not None:
             quarterly_df = quarterly_financial_data[ticker]
             
-            # 60-day lag to account for reporting delay
-            aligned_q = quarterly_df.reindex(common_dates, method='ffill').shift(60)
+            # 90-day lag to account for reporting delay
+            aligned_q = quarterly_df.reindex(common_dates, method='ffill').shift(90)
             
             # Core fundamentals
             features_df['ROA'] = aligned_q['ROA']
@@ -1869,29 +2063,134 @@ def create_complete_real_features(price_data, df_return, vnindex_data, quarterly
             features_df['Cash_Ratio'] = aligned_q['Cash_Ratio']
             features_df['Asset_Turnover'] = aligned_q['Asset_Turnover']
             
-            # Quarterly changes (simplified)
+            # Quarterly changes (enhanced)
             features_df['ROA_Change'] = aligned_q['ROA'].pct_change(periods=1)
+            features_df['ROA_Change_4Q'] = aligned_q['ROA'].pct_change(periods=4)  # Year-over-year
             features_df['Leverage_Change'] = aligned_q['Leverage'].pct_change(periods=1)
+            features_df['Cash_Ratio_Change'] = aligned_q['Cash_Ratio'].pct_change(periods=1)
             
-            print(f"   ✅ {ticker}: {len(quarterly_df)} quarters mapped")
+            # Financial ratios
+            features_df['ROA_Leverage_Ratio'] = aligned_q['ROA'] / (aligned_q['Leverage'] + 1)
+            features_df['Cash_Asset_Ratio'] = aligned_q['Cash_Ratio'] * aligned_q['Asset_Turnover']
+            
+            print(f"   ✅ {ticker}: {len(quarterly_df)} quarters mapped with enhanced features")
         else:
             print(f"   ❌ {ticker}: No quarterly data - SKIP")
             continue
         
+        # 6. Economic Indicators (Enhanced with Vnstock data)
+        if economic_data is not None:
+            aligned_econ = economic_data.reindex(common_dates, method='ffill')
+            
+            # Vietnamese Macro Indicators (from Vnstock)
+            if 'GDP' in aligned_econ.columns:
+                features_df['GDP'] = aligned_econ['GDP'].shift(1)
+                features_df['GDP_Change'] = aligned_econ['GDP'].pct_change().shift(1)
+                features_df['GDP_MA'] = aligned_econ['GDP'].rolling(60).mean().shift(1)
+                print(f"   ✅ {ticker}: GDP data added")
+            
+            if 'CPI' in aligned_econ.columns:
+                features_df['CPI'] = aligned_econ['CPI'].shift(1)
+                features_df['CPI_Change'] = aligned_econ['CPI'].pct_change().shift(1)
+                features_df['CPI_MA'] = aligned_econ['CPI'].rolling(30).mean().shift(1)
+                print(f"   ✅ {ticker}: CPI data added")
+            
+            if 'Industrial_Production' in aligned_econ.columns:
+                features_df['Industrial_Production'] = aligned_econ['Industrial_Production'].shift(1)
+                features_df['IP_Change'] = aligned_econ['Industrial_Production'].pct_change().shift(1)
+                features_df['IP_MA'] = aligned_econ['Industrial_Production'].rolling(30).mean().shift(1)
+                print(f"   ✅ {ticker}: Industrial Production data added")
+            
+            if 'Interest_Rate' in aligned_econ.columns:
+                features_df['Interest_Rate'] = aligned_econ['Interest_Rate'].shift(1)
+                features_df['Interest_Rate_Change'] = aligned_econ['Interest_Rate'].pct_change().shift(1)
+                print(f"   ✅ {ticker}: Interest Rate data added")
+            
+            if 'USD_VND' in aligned_econ.columns:
+                features_df['USD_VND'] = aligned_econ['USD_VND'].shift(1)
+                features_df['USD_VND_Change'] = aligned_econ['USD_VND'].pct_change().shift(1)
+                features_df['USD_VND_MA'] = aligned_econ['USD_VND'].rolling(30).mean().shift(1)
+                print(f"   ✅ {ticker}: USD/VND data added")
+            
+            if 'Foreign_Reserves' in aligned_econ.columns:
+                features_df['Foreign_Reserves'] = aligned_econ['Foreign_Reserves'].shift(1)
+                features_df['FR_Change'] = aligned_econ['Foreign_Reserves'].pct_change().shift(1)
+                print(f"   ✅ {ticker}: Foreign Reserves data added")
+            
+            # Global Indicators (from yfinance)
+            if 'Oil_Price' in aligned_econ.columns:
+                features_df['Oil_Price'] = aligned_econ['Oil_Price'].shift(1)
+                features_df['Oil_Price_MA'] = aligned_econ['Oil_Price'].rolling(20).mean().shift(1)
+                features_df['Oil_Price_Ratio'] = (aligned_econ['Oil_Price'] / aligned_econ['Oil_Price'].rolling(20).mean()).shift(1)
+                features_df['Oil_Price_Change'] = aligned_econ['Oil_Price'].pct_change().shift(1)
+                print(f"   ✅ {ticker}: Oil Price data added")
+            
+            if 'Gold_Price' in aligned_econ.columns:
+                features_df['Gold_Price'] = aligned_econ['Gold_Price'].shift(1)
+                if 'Oil_Price' in aligned_econ.columns:
+                    features_df['Gold_Oil_Ratio'] = (aligned_econ['Gold_Price'] / aligned_econ['Oil_Price']).shift(1)
+                print(f"   ✅ {ticker}: Gold Price data added")
+            
+            if 'US_10Y_Yield' in aligned_econ.columns:
+                features_df['US_10Y_Yield'] = aligned_econ['US_10Y_Yield'].shift(1)
+                features_df['Yield_Change'] = aligned_econ['US_10Y_Yield'].pct_change().shift(1)
+                print(f"   ✅ {ticker}: US 10Y Yield data added")
+            
+            if 'VIX' in aligned_econ.columns:
+                features_df['VIX'] = aligned_econ['VIX'].shift(1)
+                features_df['VIX_MA'] = aligned_econ['VIX'].rolling(20).mean().shift(1)
+                features_df['VIX_Ratio'] = (aligned_econ['VIX'] / aligned_econ['VIX'].rolling(20).mean()).shift(1)
+                print(f"   ✅ {ticker}: VIX data added")
+            
+            print(f"   ✅ {ticker}: All economic indicators added")
+        else:
+            print(f"   ⚠️ {ticker}: No economic data available")
+        
+        # 7. Interaction Features (Enhanced with Macro indicators)
+        features_df['ROA_Market_Interaction'] = features_df['ROA'] * features_df['Market_Return']
+        features_df['Volatility_Market_Interaction'] = features_df['Volatility_20'] * features_df['Market_Volatility']
+        
+        # Oil-energy stock interaction
+        if 'Oil_Price' in features_df.columns:
+            features_df['Oil_Stock_Interaction'] = features_df['Oil_Price'] * features_df['Return_Lag1']
+            features_df['Oil_Volatility_Interaction'] = features_df['Oil_Price'] * features_df['Volatility_20']
+        
+        # Macro-economic interactions
+        if 'GDP' in features_df.columns:
+            features_df['GDP_Stock_Interaction'] = features_df['GDP'] * features_df['Return_Lag1']
+            features_df['GDP_Market_Interaction'] = features_df['GDP'] * features_df['Market_Return']
+        
+        if 'CPI' in features_df.columns:
+            features_df['CPI_Stock_Interaction'] = features_df['CPI'] * features_df['Return_Lag1']
+            features_df['CPI_Volatility_Interaction'] = features_df['CPI'] * features_df['Volatility_20']
+        
+        if 'Interest_Rate' in features_df.columns:
+            features_df['Interest_Stock_Interaction'] = features_df['Interest_Rate'] * features_df['Return_Lag1']
+            features_df['Interest_Market_Interaction'] = features_df['Interest_Rate'] * features_df['Market_Return']
+        
+        if 'USD_VND' in features_df.columns:
+            features_df['FX_Stock_Interaction'] = features_df['USD_VND'] * features_df['Return_Lag1']
+            features_df['FX_Volatility_Interaction'] = features_df['USD_VND'] * features_df['Volatility_20']
+        
+        # Industrial Production - Energy sector interaction
+        if 'Industrial_Production' in features_df.columns:
+            features_df['IP_Energy_Interaction'] = features_df['Industrial_Production'] * features_df['Return_Lag1']
+            features_df['IP_Market_Interaction'] = features_df['Industrial_Production'] * features_df['Market_Return']
+        
         # === IMPROVED TARGET ENGINEERING ===
-        # Forward return với aggressive winsorization
+        # Forward return với better preprocessing
         target = returns.shift(-1)
         
-        # Remove extreme outliers (5%-95% instead of 1%-99%)
-        lower_bound = target.quantile(0.05)
-        upper_bound = target.quantile(0.95)
+        # Remove extreme outliers (1%-99% instead of 5%-95%)
+        lower_bound = target.quantile(0.01)
+        upper_bound = target.quantile(0.99)
         target_clean = target.clip(lower=lower_bound, upper=upper_bound)
         
-        # Normalize target to reduce variance
-        target_mean = target_clean.mean()
-        target_std = target_clean.std()
-        if target_std > 0:
-            target_normalized = (target_clean - target_mean) / target_std
+        # Robust normalization
+        target_median = target_clean.median()
+        target_mad = np.median(np.abs(target_clean - target_median))  # Median Absolute Deviation
+        if target_mad > 0:
+            target_normalized = (target_clean - target_median) / (1.4826 * target_mad)  # Robust scaling
         else:
             target_normalized = target_clean
         
@@ -1900,7 +2199,7 @@ def create_complete_real_features(price_data, df_return, vnindex_data, quarterly
         target_normalized = target_normalized.reindex(features_df.index).dropna()
         common_idx = features_df.index.intersection(target_normalized.index)
         
-        if len(common_idx) < 50:
+        if len(common_idx) < 100:  # Tăng yêu cầu minimum
             print(f"   ⚠️ {ticker}: Insufficient aligned data")
             continue
         
@@ -1909,7 +2208,7 @@ def create_complete_real_features(price_data, df_return, vnindex_data, quarterly
         
         # Quality check
         print(f"   📊 {ticker}: Features={features_final.shape[1]}, Samples={len(target_final)}")
-        print(f"       Target: mean={target_final.mean():.4f}, std={target_final.std():.4f}")
+        print(f"       Target: median={target_final.median():.4f}, mad={np.median(np.abs(target_final - target_final.median())):.4f}")
         
         # Ticker dummy
         features_final[f'Ticker_{ticker}'] = 1
@@ -1923,25 +2222,36 @@ def create_complete_real_features(price_data, df_return, vnindex_data, quarterly
     all_features = pd.concat(features_list, axis=0, sort=False).fillna(0)
     all_targets = pd.concat(targets_list, axis=0)
     
-    # Final cleaning
+    # Enhanced cleaning
     all_features = all_features.replace([np.inf, -np.inf], np.nan).fillna(0)
     
-    # Cap extreme values (3 std)
-    for col in all_features.select_dtypes(include=[np.number]).columns:
-        if col.startswith('Ticker_'):
-            continue
-        
-        mean = all_features[col].mean()
-        std = all_features[col].std()
-        
-        if std > 0:
-            lower = mean - 3 * std
-            upper = mean + 3 * std
-            all_features[col] = all_features[col].clip(lower=lower, upper=upper)
+    # Robust scaling for numerical features
+    from sklearn.preprocessing import RobustScaler
+    from sklearn.feature_selection import SelectKBest, f_regression, mutual_info_regression
     
-    print(f"\n✅ Final dataset: {all_features.shape[0]} samples, {all_features.shape[1]} features")
+    numerical_cols = [col for col in all_features.columns if not col.startswith('Ticker_')]
+    scaler = RobustScaler()
+    all_features[numerical_cols] = scaler.fit_transform(all_features[numerical_cols])
     
-    return all_features, all_targets
+    # Feature selection - keep top 30 features
+    print(f"\n🔍 FEATURE SELECTION...")
+    selector = SelectKBest(score_func=f_regression, k=min(30, len(numerical_cols)))
+    X_selected = selector.fit_transform(all_features[numerical_cols], all_targets)
+    
+    # Get selected feature names
+    selected_features = [numerical_cols[i] for i in selector.get_support(indices=True)]
+    ticker_features = [col for col in all_features.columns if col.startswith('Ticker_')]
+    final_features = selected_features + ticker_features
+    
+    # Create final dataset
+    final_features_df = all_features[final_features]
+    
+    print(f"   Selected {len(selected_features)} numerical features from {len(numerical_cols)}")
+    print(f"   Top 10 selected features: {selected_features[:10]}")
+    
+    print(f"\n✅ Enhanced dataset: {final_features_df.shape[0]} samples, {final_features_df.shape[1]} features")
+    
+    return final_features_df, all_targets
 
 def predict_future_with_real_data(models_dict, X_columns, quarterly_financial_data, successful_tickers):
     """
@@ -2059,6 +2369,9 @@ def main():
         print("❌ KHÔNG THỂ LẤY VN-INDEX - DỪNG CHƯƠNG TRÌNH")
         return
     
+    # 1.5. Lấy Economic Indicators
+    economic_data = get_economic_indicators(start_date, end_date)
+    
     # 2. Lấy quarterly financial timeseries (3,4,5,6) trong cùng time period
     print(f"\n📊 Lấy quarterly financial timeseries ({start_date} - {end_date}):")
     quarterly_financial_data = {}
@@ -2153,7 +2466,7 @@ def main():
     print(f"\n🤖 MACHINE LEARNING VỚI TẤT CẢ DỮ LIỆU THỰC")
     print("=" * 60)
     
-    X, y = create_complete_real_features(price_data, df_return, vnindex_data, quarterly_financial_data)
+    X, y = create_complete_real_features(price_data, df_return, vnindex_data, quarterly_financial_data, economic_data)
     
     if X is None:
         print("❌ Không tạo được features")
@@ -2186,44 +2499,110 @@ def main():
     print(f"   Feature range: [{X.min().min():.6f}, {X.max().max():.6f}]")
     print(f"   Feature mean: {X.mean().mean():.6f}, std: {X.std().mean():.6f}")
     
-    # SIMPLIFIED MODEL - PREVENT OVERFITTING (theo documentation)
-    from sklearn.linear_model import LinearRegression, Ridge
+    # IMPROVED MODEL SELECTION - Enhanced based on reliability assessment
+    from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+    from sklearn.ensemble import GradientBoostingRegressor
+    from sklearn.model_selection import TimeSeriesSplit, cross_val_score
     
-    print(f"🔧 TRAINING SIMPLE LINEAR MODEL FOR FINANCIAL PREDICTION...")
-    print(f"   Switching to LINEAR MODEL to prevent overfitting")
+    print(f"🔧 TRAINING IMPROVED MODELS FOR FINANCIAL PREDICTION...")
+    print(f"   Using enhanced model selection based on reliability assessment")
     
-    # Use simple linear regression as baseline (most common in finance)
-    rf_model = LinearRegression()
+    # Define improved models with ensemble focus
+    models = {
+        'Linear': LinearRegression(),
+        'Ridge_Alpha1': Ridge(alpha=1.0, random_state=42),
+        'Ridge_Alpha10': Ridge(alpha=10.0, random_state=42),
+        'Lasso_Alpha01': Lasso(alpha=0.1, random_state=42, max_iter=2000),
+        'ElasticNet': ElasticNet(alpha=0.1, l1_ratio=0.5, random_state=42, max_iter=2000),
+        'RF_Conservative': RandomForestRegressor(
+            n_estimators=100, max_depth=5, min_samples_split=50, 
+            min_samples_leaf=25, max_features=0.5, random_state=42, n_jobs=-1
+        ),
+        'RF_Moderate': RandomForestRegressor(
+            n_estimators=200, max_depth=8, min_samples_split=30, 
+            min_samples_leaf=15, max_features=0.7, random_state=42, n_jobs=-1
+        ),
+        'GradientBoosting': GradientBoostingRegressor(
+            n_estimators=100, max_depth=4, learning_rate=0.1, 
+            min_samples_split=50, min_samples_leaf=25, random_state=42
+        ),
+        'ExtraTrees': RandomForestRegressor(
+            n_estimators=150, max_depth=6, min_samples_split=40, 
+            min_samples_leaf=20, max_features=0.6, random_state=42, n_jobs=-1
+        ),
+        'AdaBoost': GradientBoostingRegressor(
+            n_estimators=80, max_depth=3, learning_rate=0.15, 
+            min_samples_split=60, min_samples_leaf=30, random_state=42
+        )
+    }
     
-    # Very conservative Random Forest as backup (theo doc recommendations)
-    gb_model = RandomForestRegressor(
-        n_estimators=50,         # Fewer trees to prevent memorization
-        max_depth=2,            # Very shallow (doc suggests this for overfitting)
-        min_samples_split=100,  # Require many samples to split
-        min_samples_leaf=50,    # Large leaf sizes
-        max_features=0.3,       # Use few features
-        random_state=42, 
-        n_jobs=-1
-    )
+    # Time series cross-validation
+    tscv = TimeSeriesSplit(n_splits=5)
     
-    # Ridge with high regularization
-    ridge_model = Ridge(alpha=10.0, random_state=42)  # Higher alpha
+    print(f"🔄 PERFORMING TIME SERIES CROSS-VALIDATION...")
+    best_model_name = None
+    best_cv_score = -np.inf
+    model_results = {}
     
-    # Train all models
-    rf_model.fit(X, y)
-    gb_model.fit(X, y) 
-    ridge_model.fit(X, y)
+    for name, model in models.items():
+        print(f"   Testing {name}...")
+        
+        # Cross-validation
+        cv_scores = cross_val_score(model, X, y, cv=tscv, scoring='r2', n_jobs=-1)
+        cv_mean = cv_scores.mean()
+        cv_std = cv_scores.std()
+        
+        model_results[name] = {
+            'model': model,
+            'cv_mean': cv_mean,
+            'cv_std': cv_std,
+            'cv_scores': cv_scores
+        }
+        
+        print(f"      CV R²: {cv_mean:.4f} ± {cv_std:.4f}")
+        
+        # Select best model
+        if cv_mean > best_cv_score:
+            best_cv_score = cv_mean
+            best_model_name = name
     
-    print(f"✅ Simple models trained: Linear + Very Conservative RF + Ridge")
-    print(f"   Linear: Basic regression baseline")
-    print(f"   RF: max_depth=2, n_estimators=50, very conservative")
-    print(f"   Ridge: alpha=10.0 for strong regularization")
+    # Train best model
+    best_model = model_results[best_model_name]['model']
+    best_model.fit(X, y)
     
-    # Feature importance (use RF backup model since Linear doesn't have feature_importances_)
-    feature_importance = pd.DataFrame({
-        'Feature': X.columns,
-        'Importance': gb_model.feature_importances_
-    }).sort_values('Importance', ascending=False)
+    print(f"✅ Best model selected: {best_model_name} (CV R²: {best_cv_score:.4f})")
+    
+    # Create ensemble from top 3 models
+    top_models = sorted(model_results.items(), key=lambda x: x[1]['cv_mean'], reverse=True)[:3]
+    print(f"🏆 Top 3 models for ensemble:")
+    for i, (name, result) in enumerate(top_models):
+        print(f"   {i+1}. {name}: CV R² = {result['cv_mean']:.4f}")
+    
+    # Train ensemble models
+    ensemble_models = {}
+    for name, result in top_models:
+        model = result['model']
+        model.fit(X, y)
+        ensemble_models[name] = model
+    
+    # Keep original models for compatibility
+    rf_model = best_model  # Primary model
+    gb_model = model_results['RF_Conservative']['model']  # Backup
+    ridge_model = model_results['Ridge_Alpha10']['model']  # Regularized
+    
+    # Feature importance (use best model if it has feature_importances_, otherwise use RF backup)
+    if hasattr(best_model, 'feature_importances_'):
+        feature_importance = pd.DataFrame({
+            'Feature': X.columns,
+            'Importance': best_model.feature_importances_
+        }).sort_values('Importance', ascending=False)
+    else:
+        # Train RF backup model for feature importance
+        gb_model.fit(X, y)
+        feature_importance = pd.DataFrame({
+            'Feature': X.columns,
+            'Importance': gb_model.feature_importances_
+        }).sort_values('Importance', ascending=False)
     
     print(f"\n📊 TOP 10 FEATURE IMPORTANCE:")
     for i, (_, row) in enumerate(feature_importance.head(10).iterrows()):
@@ -2238,54 +2617,132 @@ def main():
             rank = feature_importance[feature_importance['Feature'] == var].index[0] + 1
             print(f"   {var:20s}: {importance:.4f} (#{rank}) ✅ REAL")
     
-    # Model performance evaluation with ensemble
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # IMPROVED MODEL EVALUATION - Walk-forward validation
+    print(f"\n🔄 WALK-FORWARD VALIDATION FOR IMPROVED RELIABILITY...")
     
-    # Recreate simple models for evaluation
-    rf_eval = LinearRegression()
-    gb_eval = RandomForestRegressor(n_estimators=50, max_depth=2, min_samples_split=100, min_samples_leaf=50, max_features=0.3, random_state=42, n_jobs=-1)
-    ridge_eval = Ridge(alpha=10.0, random_state=42)
+    # Create time-based splits for walk-forward validation
+    n_samples = len(X)
+    n_splits = 5
+    split_size = n_samples // n_splits
     
-    rf_eval.fit(X_train, y_train)
-    gb_eval.fit(X_train, y_train)
-    ridge_eval.fit(X_train, y_train)
+    walk_forward_scores = []
+    walk_forward_predictions = []
+    walk_forward_actuals = []
     
-    # Ensemble prediction
-    rf_pred = rf_eval.predict(X_test)
-    gb_pred = gb_eval.predict(X_test) 
-    ridge_pred = ridge_eval.predict(X_test)
-    y_pred = 0.5 * rf_pred + 0.3 * gb_pred + 0.2 * ridge_pred
+    for i in range(n_splits - 1):
+        # Training set: from start to split point
+        train_end = (i + 1) * split_size
+        X_train = X.iloc[:train_end]
+        y_train = y.iloc[:train_end]
+        
+        # Test set: next split
+        test_start = train_end
+        test_end = (i + 2) * split_size if i + 2 < n_splits else n_samples
+        X_test = X.iloc[test_start:test_end]
+        y_test = y.iloc[test_start:test_end]
+        
+        if len(X_test) == 0:
+            continue
+        
+        # Train ensemble models on training set
+        ensemble_predictions = []
+        ensemble_weights = []
+        
+        for name, model in ensemble_models.items():
+            model.fit(X_train, y_train)
+            pred = model.predict(X_test)
+            ensemble_predictions.append(pred)
+            # Weight based on CV performance
+            cv_score = model_results[name]['cv_mean']
+            weight = max(0, cv_score)  # Only positive weights
+            ensemble_weights.append(weight)
+        
+        # Normalize weights
+        if sum(ensemble_weights) > 0:
+            ensemble_weights = np.array(ensemble_weights) / sum(ensemble_weights)
+        else:
+            ensemble_weights = np.ones(len(ensemble_weights)) / len(ensemble_weights)
+        
+        # Ensemble prediction
+        y_pred = np.average(ensemble_predictions, axis=0, weights=ensemble_weights)
+        
+        # Calculate score
+        r2 = r2_score(y_test, y_pred)
+        walk_forward_scores.append(r2)
+        walk_forward_predictions.extend(y_pred)
+        walk_forward_actuals.extend(y_test)
+        
+        print(f"   Split {i+1}: Train={len(X_train)}, Test={len(X_test)}, Ensemble R²={r2:.4f}")
     
-    r2 = r2_score(y_test, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    # Calculate overall performance
+    mean_wf_score = np.mean(walk_forward_scores)
+    std_wf_score = np.std(walk_forward_scores)
     
-    print(f"\n📈 MODEL PERFORMANCE VỚI DỮ LIỆU THỰC:")
-    print(f"   R² Score: {r2:.6f}")
-    print(f"   RMSE: {rmse:.6f}")
+    # Final evaluation on full dataset
+    y_pred_full = best_model.predict(X)
+    r2_full = r2_score(y, y_pred_full)
+    rmse_full = np.sqrt(mean_squared_error(y, y_pred_full))
+    
+    print(f"\n📈 IMPROVED MODEL PERFORMANCE:")
+    print(f"   Walk-Forward CV R²: {mean_wf_score:.4f} ± {std_wf_score:.4f}")
+    print(f"   Full Dataset R²: {r2_full:.6f}")
+    print(f"   Full Dataset RMSE: {rmse_full:.6f}")
     print(f"   Real Data Coverage: {len(successful_tickers)}/{len(tickers)} = {len(successful_tickers)/len(tickers)*100:.1f}%")
     
-    # 7. Future Predictions với ensemble models
-    models_dict = {'rf': rf_model, 'gb': gb_model, 'ridge': ridge_model}
+    # Model reliability assessment
+    reliability_grade = "F"
+    if mean_wf_score >= 0.3:
+        reliability_grade = "A"
+    elif mean_wf_score >= 0.2:
+        reliability_grade = "B"
+    elif mean_wf_score >= 0.1:
+        reliability_grade = "C"
+    elif mean_wf_score >= 0.05:
+        reliability_grade = "D"
+    
+    print(f"   🎯 Model Reliability Grade: {reliability_grade}")
+    
+    if mean_wf_score < 0.1:
+        print(f"   ⚠️ WARNING: Model still shows low reliability. Consider further improvements.")
+    else:
+        print(f"   ✅ Model shows improved reliability compared to baseline.")
+    
+    # 7. Future Predictions với improved model
+    models_dict = {'best': best_model, 'rf': gb_model, 'ridge': ridge_model}
     future_predictions = predict_future_with_real_data(models_dict, X.columns, quarterly_financial_data, successful_tickers)
     
     # 8. Create ML Prediction Charts
     create_ml_prediction_charts(future_predictions, successful_tickers)
     
     # 9. Summary
-    print(f"\n🎉 HOÀN THÀNH PHÂN TÍCH VỚI TẤT CẢ DỮ LIỆU THỰC!")
+    print(f"\n🎉 HOÀN THÀNH PHÂN TÍCH VỚI MÔ HÌNH ML ĐÃ CẢI THIỆN!")
     print(f"⏰ Thời gian: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"\n📊 TÓM TẮT HOÀN CHỈNH:")
+    print(f"\n📊 TÓM TẮT HOÀN CHỈNH VỚI CẢI THIỆN:")
     print(f"   ✅ 6/6 chỉ số từ quarterly timeseries vnstock (KHÔNG mock)")
     print(f"   ✅ COMPLETE Quantitative Flow Analysis:")
     print(f"       • Return & Risk Analysis (VaR, CVaR, Drawdown)")
     print(f"       • Sharpe Ratio & Risk-Adjusted Metrics")
     print(f"       • Factor Analysis (EW vs CW Portfolios)")
     print(f"       • Portfolio Optimization (Efficient Frontier, Tangency, GMV)")
-    print(f"   ✅ ML model với {X.shape[1]} features thực (including QoQ changes)")
-    print(f"   ✅ Dự đoán 2026-2030 với quarterly trend analysis")
+    print(f"   ✅ ENHANCED ML model với {X.shape[1]} optimized features:")
+    print(f"       • Technical indicators (RSI, Bollinger Bands, MA ratios)")
+    print(f"       • Multiple volatility measures")
+    print(f"       • Market interaction features")
+    print(f"       • Vietnamese macro indicators (GDP, CPI, Industrial Production, Interest Rate)")
+    print(f"       • Global indicators (Oil, Gold, USD/VND, VIX, Treasury)")
+    print(f"       • Macro-economic interaction features")
+    print(f"       • Feature selection (top 30 features)")
+    print(f"       • Robust target preprocessing")
+    print(f"   ✅ Enhanced model selection với Time Series CV")
+    print(f"   ✅ Ensemble methods với top 3 models")
+    print(f"   ✅ Walk-forward validation với ensemble prediction")
+    print(f"   ✅ Best model: {best_model_name} (CV R²: {best_cv_score:.4f})")
+    print(f"   ✅ Model Reliability Grade: {reliability_grade}")
+    print(f"   ✅ Dự đoán 2026-2030 với improved statistical approach")
     print(f"   📈 Best Individual Sharpe: {quant_results['Sharpe_Ratio'].max():.4f} ({quant_results['Sharpe_Ratio'].idxmax()})")
     print(f"   📈 Best Portfolio Sharpe: {max([v['Sharpe'] for v in portfolio_results['performance_metrics'].values()]):.4f}")
     print(f"   📊 EW vs CW Performance: {factor_results['performance_comparison'].loc['Equal-Weighted', 'Sharpe']:.4f} vs {factor_results['performance_comparison'].loc['Cap-Weighted', 'Sharpe']:.4f}")
+    print(f"   🎯 Model Performance: Walk-Forward R² = {mean_wf_score:.4f} ± {std_wf_score:.4f}")
 
 if __name__ == "__main__":
     main()
