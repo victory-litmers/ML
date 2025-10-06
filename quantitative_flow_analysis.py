@@ -236,6 +236,52 @@ risk_df = pd.DataFrame({
 print("📊 RISK SUMMARY:")
 print(risk_df.sort_values(by='Volatility', ascending=False))
 
+# =============================================================================
+# ANNUAL VOLATILITY CHART
+# =============================================================================
+
+print(f"\n📊 Tạo biểu đồ Annual Volatility...")
+
+plt.figure(figsize=(12, 6))
+volatility_data = risk_df['Volatility'].sort_values(ascending=False)
+colors = ['red', 'orange', 'gold', 'lightgreen', 'green', 'darkgreen']
+
+bars = plt.bar(volatility_data.index, volatility_data.values, color=colors, alpha=0.7)
+
+plt.title('Annual Volatility by Stock', fontsize=16, fontweight='bold')
+plt.xlabel('Stocks', fontsize=12)
+plt.ylabel('Volatility', fontsize=12)
+plt.xticks(rotation=45)
+plt.grid(True, alpha=0.3, axis='y')
+
+# Add value labels on bars
+for bar, value in zip(bars, volatility_data.values):
+    plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.0005,
+            f'{value:.4f}', ha='center', va='bottom', fontweight='bold', fontsize=11)
+
+plt.tight_layout()
+plt.savefig('charts/annual_volatility_chart.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+print(f"\n📊 Annual Volatility Analysis:")
+print("-" * 50)
+print(f"   • Highest volatility: {volatility_data.max():.4f} ({volatility_data.idxmax()})")
+print(f"   • Lowest volatility: {volatility_data.min():.4f} ({volatility_data.idxmin()})")
+print(f"   • Average volatility: {volatility_data.mean():.4f}")
+print(f"   • Volatility range: {volatility_data.max() - volatility_data.min():.4f}")
+
+# Risk categories
+high_risk = volatility_data[volatility_data > 0.025].count()
+medium_risk = volatility_data[(volatility_data >= 0.020) & (volatility_data <= 0.025)].count()
+low_risk = volatility_data[volatility_data < 0.020].count()
+
+print(f"\n📊 Risk Categories:")
+print(f"   • 🔴 High Risk (>2.5%): {high_risk} cổ phiếu")
+print(f"   • 🟡 Medium Risk (2.0%-2.5%): {medium_risk} cổ phiếu")
+print(f"   • 🟢 Low Risk (<2.0%): {low_risk} cổ phiếu")
+
+print(f"\n✅ Annual Volatility chart completed!")
+
 semideviation = df_return_stocks[df_return_stocks < 0].std(ddof=0)
 print("📊 SEMIDeviation:")
 print(semideviation.sort_values(ascending=False))
