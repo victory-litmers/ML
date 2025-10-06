@@ -253,6 +253,28 @@ print(f"\n📊 Risk-free rate sử dụng: {risk_free_rate*100:.1f}%")
 print(f"📊 Số cổ phiếu có Sharpe ratio dương: {(sharpe_ratio_stocks > 0).sum()}/{len(sharpe_ratio_stocks)}")
 print(f"📊 Sharpe ratio trung bình: {sharpe_ratio_stocks.mean():.4f}")
 
+# =============================================================================
+# RTRR (RETURN-TO-RISK RATIO) TABLE
+# =============================================================================
+
+print(f"\n📊 RTRR (RETURN-TO-RISK RATIO) TABLE:")
+print("=" * 70)
+
+# Tạo bảng RTRR với Annualized Return, Annualized Volatility và RTRR
+rtrr_table = pd.DataFrame({
+    'Annualized Return': annualized_return_stocks,
+    'Annualized Volatility': annualized_volatility_stocks,
+    'RTRR': rtrr_stocks
+}).sort_values('RTRR', ascending=False)
+
+print(rtrr_table.round(4))
+
+print(f"\n📊 RTRR Summary:")
+print(f"   • RTRR = Annualized Return / Annualized Volatility")
+print(f"   • Đo lường mức lợi nhuận nhận được cho mỗi đơn vị rủi ro")
+print(f"   • Best RTRR: {rtrr_stocks.max():.4f} ({rtrr_stocks.idxmax()})")
+print(f"   • Worst RTRR: {rtrr_stocks.min():.4f} ({rtrr_stocks.idxmin()})")
+
 # Bỏ phần vẽ biểu đồ Sharpe ratio theo industry
 
 # =============================================================================
