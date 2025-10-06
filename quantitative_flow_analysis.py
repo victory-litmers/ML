@@ -1133,10 +1133,10 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     
     print(f"📈 EQUAL-WEIGHTED PORTFOLIO:")
     print(f"   • Final Cumulative Return: {ew_final:.4f}")
-    print(f"   • Total Return: {ew_total_return:.2f}%")
-    print(f"   • Annualized Volatility: {ew_volatility*100:.2f}%")
+    print(f"   • Total Return: {ew_total_return/100:.4f}")
+    print(f"   • Annualized Volatility: {ew_volatility:.4f}")
     print(f"   • Sharpe Ratio: {ew_sharpe:.4f}")
-    print(f"   • Weight per stock: {1/len(tickers)*100:.1f}%")
+    print(f"   • Weight per stock: {1/len(tickers):.4f}")
     
     print(f"\n📊 CAP-WEIGHTED PORTFOLIO:")
     print(f"   • Final Cumulative Return: {cw_final:.4f}")
@@ -1146,9 +1146,48 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     
     # Print weight distribution for CW portfolio
     print(f"\n📊 CAP-WEIGHTED PORTFOLIO WEIGHTS (Latest):")
+    print("=" * 50)
     latest_weights = weights.iloc[-1]
-    for ticker, weight in latest_weights.items():
-        print(f"   • {ticker}: {weight*100:.2f}%")
+    latest_sorted = latest_weights.sort_values(ascending=False)
+    
+    for ticker, weight in latest_sorted.items():
+        print(f"   • {ticker}: {weight:.4f}")
+    
+    print(f"\n📊 Weight Statistics:")
+    print(f"   • Highest weight: {latest_weights.max():.4f} ({latest_weights.idxmax()})")
+    print(f"   • Lowest weight: {latest_weights.min():.4f} ({latest_weights.idxmin()})")
+    print(f"   • Weight range: {latest_weights.max() - latest_weights.min():.4f}")
+    print(f"   • Total weights sum: {latest_weights.sum():.4f}")
+    
+    # Print Cap-Weighted Portfolio Weights for last month (July 2025)
+    print(f"\n📊 CAP-WEIGHTED PORTFOLIO WEIGHTS (Last Month - July 2025):")
+    print("=" * 60)
+    
+    # Find weights for July 2025 (last month)
+    july_2025_mask = (weights.index.year == 2025) & (weights.index.month == 7)
+    if july_2025_mask.any():
+        july_2025_weights = weights[july_2025_mask].iloc[-1]  # Get last day of July 2025
+        july_2025_sorted = july_2025_weights.sort_values(ascending=False)
+        
+        for ticker, weight in july_2025_sorted.items():
+            print(f"   • {ticker}: {weight:.4f}")
+        
+        print(f"\n📊 July 2025 Weight Statistics:")
+        print(f"   • Highest weight: {july_2025_weights.max():.4f} ({july_2025_weights.idxmax()})")
+        print(f"   • Lowest weight: {july_2025_weights.min():.4f} ({july_2025_weights.idxmin()})")
+        print(f"   • Weight range: {july_2025_weights.max() - july_2025_weights.min():.4f}")
+        print(f"   • Total weights sum: {july_2025_weights.sum():.4f}")
+        
+        # Compare with latest weights
+        print(f"\n📊 Weight Changes (Latest vs July 2025):")
+        weight_changes = latest_weights - july_2025_weights
+        weight_changes_sorted = weight_changes.sort_values(ascending=False)
+        
+        for ticker, change in weight_changes_sorted.items():
+            direction = "📈" if change > 0 else "📉" if change < 0 else "➡️"
+            print(f"   • {ticker}: {change:+.4f} {direction}")
+    else:
+        print("   ⚠️ No data available for July 2025")
     
     print(f"\n🏆 PERFORMANCE COMPARISON:")
     print("-" * 40)
