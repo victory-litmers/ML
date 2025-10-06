@@ -225,7 +225,7 @@ print(rtrr_df_stocks.sort_values(by='RTRR', ascending=False))
 # Bỏ phần tính toán theo industry
 
 # Tính Sharpe Ratio theo stock
-risk_free_rate = 0.05  # 5% risk-free rate
+risk_free_rate = 0.03  # 5% risk-free rate
 sharpe_ratio_stocks = (annualized_return_stocks - risk_free_rate) / annualized_volatility_stocks
 print("📊 Sharpe Ratio (by Stock):")
 print(sharpe_ratio_stocks.sort_values(ascending=False))
@@ -237,6 +237,21 @@ print(sharpe_ratio_stocks.sort_values(ascending=False))
 print(f"\n📊 Sharpe Ratio & Risk-Adjusted Metrics...")
 
 # Sharpe ratio đã được tính theo stock ở trên
+
+# In ra bảng tổng hợp các chỉ số risk-adjusted
+print("\n📊 BẢNG TỔNG HỢP RISK-ADJUSTED METRICS:")
+print("=" * 80)
+risk_metrics_df = pd.DataFrame({
+    'Annualized Return': annualized_return_stocks,
+    'Annualized Volatility': annualized_volatility_stocks,
+    'RTRR': rtrr_stocks,
+    'Sharpe Ratio': sharpe_ratio_stocks
+})
+print(risk_metrics_df.sort_values('Sharpe Ratio', ascending=False).round(4))
+
+print(f"\n📊 Risk-free rate sử dụng: {risk_free_rate*100:.1f}%")
+print(f"📊 Số cổ phiếu có Sharpe ratio dương: {(sharpe_ratio_stocks > 0).sum()}/{len(sharpe_ratio_stocks)}")
+print(f"📊 Sharpe ratio trung bình: {sharpe_ratio_stocks.mean():.4f}")
 
 # Bỏ phần vẽ biểu đồ Sharpe ratio theo industry
 
@@ -250,6 +265,37 @@ print(f"\n📊 Max Drawdown Calculation...")
 wealth_index_stocks = (1 + df_return_stocks).cumprod() * 1000  # Giá trị ban đầu là 1000
 
 # Wealth index đã được tính theo stock ở trên
+
+# Tính toán và in ra Max Drawdown cho từng cổ phiếu
+print("\n📊 MAX DRAWDOWN ANALYSIS:")
+print("=" * 60)
+
+max_drawdowns = {}
+final_wealth = {}
+
+for ticker in tickers:
+    if ticker in wealth_index_stocks.columns:
+        wealth_series = wealth_index_stocks[ticker]
+        previous_peaks = wealth_series.cummax()
+        drawdowns = (wealth_series - previous_peaks) / previous_peaks
+        max_dd = drawdowns.min()
+        max_drawdowns[ticker] = max_dd
+        final_wealth[ticker] = wealth_series.iloc[-1]
+
+# Tạo DataFrame cho Max Drawdown
+drawdown_df = pd.DataFrame({
+    'Initial Wealth': 1000,
+    'Final Wealth': [final_wealth[ticker] for ticker in tickers],
+    'Total Return %': [(final_wealth[ticker]/1000 - 1)*100 for ticker in tickers],
+    'Max Drawdown %': [max_drawdowns[ticker]*100 for ticker in tickers]
+}, index=tickers)
+
+print(drawdown_df.sort_values('Max Drawdown %', ascending=True).round(2))
+
+print(f"\n📊 Drawdown Statistics:")
+print(f"   • Cổ phiếu có Max Drawdown thấp nhất: {min(max_drawdowns, key=max_drawdowns.get)} ({min(max_drawdowns.values())*100:.2f}%)")
+print(f"   • Cổ phiếu có Max Drawdown cao nhất: {max(max_drawdowns, key=max_drawdowns.get)} ({max(max_drawdowns.values())*100:.2f}%)")
+print(f"   • Max Drawdown trung bình: {np.mean(list(max_drawdowns.values()))*100:.2f}%")
 
 # Bỏ phần vẽ biểu đồ Previous Peaks theo industry
 
@@ -274,6 +320,14 @@ def drawdown(return_series: pd.Series):
 # =============================================================================
 
 print(f"\n📊 PORTFOLIO OPTIMIZATION STRATEGIES...")
+
+# In ra thông tin cơ bản về portfolio optimization
+print("\n📊 PORTFOLIO OPTIMIZATION OVERVIEW:")
+print("=" * 60)
+print(f"📊 Số lượng cổ phiếu trong danh mục: {len(tickers)}")
+print(f"📊 Cổ phiếu: {', '.join(tickers)}")
+print(f"📊 Thời gian phân tích: {len(df_return_stocks)} ngày giao dịch")
+print(f"📊 Risk-free rate: {risk_free_rate*100:.1f}%")
 
 # Bỏ phần portfolio optimization theo industry
 
@@ -543,8 +597,41 @@ result_df = pd.DataFrame({
     "Equal-Weighted": perf_stats(ew_returns)
 }).T
 
-print("📊 PORTFOLIO PERFORMANCE STATS:")
-print(result_df)
+print("\n📊 PORTFOLIO PERFORMANCE STATS:")
+print("=" * 70)
+print(result_df.round(4))
+
+# In ra chi tiết về từng loại portfolio
+print("\n📊 CHI TIẾT PORTFOLIO STRATEGIES:")
+print("=" * 70)
+
+print("\n🎯 1. TANGENCY PORTFOLIO (Tối đa hóa Sharpe Ratio):")
+tangency_stats = result_df.loc['Tangency']
+print(f"   • Lợi nhuận trung bình: {tangency_stats['Mean Return']:.4f} ({tangency_stats['Mean Return']*100:.2f}%)")
+print(f"   • Volatility: {tangency_stats['Volatility']:.4f} ({tangency_stats['Volatility']*100:.2f}%)")
+print(f"   • Sharpe Ratio: {tangency_stats['Sharpe']:.4f}")
+
+print("\n🛡️ 2. GMV PORTFOLIO (Global Minimum Variance):")
+gmv_stats = result_df.loc['GMV']
+print(f"   • Lợi nhuận trung bình: {gmv_stats['Mean Return']:.4f} ({gmv_stats['Mean Return']*100:.2f}%)")
+print(f"   • Volatility: {gmv_stats['Volatility']:.4f} ({gmv_stats['Volatility']*100:.2f}%)")
+print(f"   • Sharpe Ratio: {gmv_stats['Sharpe']:.4f}")
+
+print("\n⚖️ 3. EQUAL-WEIGHTED PORTFOLIO:")
+ew_stats = result_df.loc['Equal-Weighted']
+print(f"   • Lợi nhuận trung bình: {ew_stats['Mean Return']:.4f} ({ew_stats['Mean Return']*100:.2f}%)")
+print(f"   • Volatility: {ew_stats['Volatility']:.4f} ({ew_stats['Volatility']*100:.2f}%)")
+print(f"   • Sharpe Ratio: {ew_stats['Sharpe']:.4f}")
+
+print("\n📊 SO SÁNH HIỆU SUẤT:")
+print("=" * 50)
+best_sharpe_portfolio = result_df.loc[result_df['Sharpe'].idxmax()]
+best_return_portfolio = result_df.loc[result_df['Mean Return'].idxmax()]
+lowest_vol_portfolio = result_df.loc[result_df['Volatility'].idxmin()]
+
+print(f"🏆 Portfolio có Sharpe ratio tốt nhất: {best_sharpe_portfolio.name} ({best_sharpe_portfolio['Sharpe']:.4f})")
+print(f"📈 Portfolio có lợi nhuận cao nhất: {best_return_portfolio.name} ({best_return_portfolio['Mean Return']*100:.2f}%)")
+print(f"🛡️ Portfolio có rủi ro thấp nhất: {lowest_vol_portfolio.name} ({lowest_vol_portfolio['Volatility']*100:.2f}%)")
 
 # =============================================================================
 # ADVANCED PORTFOLIO DIVERSIFICATION AND RISK MANAGEMENT
@@ -1005,6 +1092,9 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     plt.show()
     
     # 12. Capitalization-Weighted vs Equal-Weighted Portfolio Performance
+    print(f"\n📊 EQUAL-WEIGHTED vs CAP-WEIGHTED PORTFOLIO COMPARISON:")
+    print("=" * 70)
+    
     plt.figure(figsize=(14, 8))
     
     # Calculate CW and EW portfolio returns
@@ -1023,6 +1113,59 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     # Calculate cumulative returns
     cw_cumulative = (1 + cw_returns).cumprod()
     ew_cumulative = (1 + ew_returns).cumprod()
+    
+    # Print detailed comparison data
+    print("\n📊 PORTFOLIO COMPARISON DATA:")
+    print("-" * 50)
+    
+    # Calculate performance metrics
+    cw_final = cw_cumulative.iloc[-1]
+    ew_final = ew_cumulative.iloc[-1]
+    cw_total_return = (cw_final - 1) * 100
+    ew_total_return = (ew_final - 1) * 100
+    outperformance = (ew_final/cw_final-1)*100
+    
+    # Calculate risk metrics
+    cw_volatility = cw_returns.std() * np.sqrt(250)
+    ew_volatility = ew_returns.std() * np.sqrt(250)
+    cw_sharpe = (cw_returns.mean() * 250 - risk_free_rate) / cw_volatility
+    ew_sharpe = (ew_returns.mean() * 250 - risk_free_rate) / ew_volatility
+    
+    print(f"📈 EQUAL-WEIGHTED PORTFOLIO:")
+    print(f"   • Final Cumulative Return: {ew_final:.4f}")
+    print(f"   • Total Return: {ew_total_return:.2f}%")
+    print(f"   • Annualized Volatility: {ew_volatility*100:.2f}%")
+    print(f"   • Sharpe Ratio: {ew_sharpe:.4f}")
+    print(f"   • Weight per stock: {1/len(tickers)*100:.1f}%")
+    
+    print(f"\n📊 CAP-WEIGHTED PORTFOLIO:")
+    print(f"   • Final Cumulative Return: {cw_final:.4f}")
+    print(f"   • Total Return: {cw_total_return:.2f}%")
+    print(f"   • Annualized Volatility: {cw_volatility*100:.2f}%")
+    print(f"   • Sharpe Ratio: {cw_sharpe:.4f}")
+    
+    # Print weight distribution for CW portfolio
+    print(f"\n📊 CAP-WEIGHTED PORTFOLIO WEIGHTS (Latest):")
+    latest_weights = weights.iloc[-1]
+    for ticker, weight in latest_weights.items():
+        print(f"   • {ticker}: {weight*100:.2f}%")
+    
+    print(f"\n🏆 PERFORMANCE COMPARISON:")
+    print("-" * 40)
+    print(f"   • EW Outperformance vs CW: {outperformance:.2f}%")
+    print(f"   • Best Total Return: {'Equal-Weighted' if ew_total_return > cw_total_return else 'Cap-Weighted'} ({max(ew_total_return, cw_total_return):.2f}%)")
+    print(f"   • Lowest Volatility: {'Equal-Weighted' if ew_volatility < cw_volatility else 'Cap-Weighted'} ({min(ew_volatility, cw_volatility)*100:.2f}%)")
+    print(f"   • Best Sharpe Ratio: {'Equal-Weighted' if ew_sharpe > cw_sharpe else 'Cap-Weighted'} ({max(ew_sharpe, cw_sharpe):.4f})")
+    
+    # Create comparison DataFrame
+    comparison_df = pd.DataFrame({
+        'Metric': ['Final Cumulative Return', 'Total Return %', 'Annualized Volatility %', 'Sharpe Ratio'],
+        'Equal-Weighted': [f"{ew_final:.4f}", f"{ew_total_return:.2f}%", f"{ew_volatility*100:.2f}%", f"{ew_sharpe:.4f}"],
+        'Cap-Weighted': [f"{cw_final:.4f}", f"{cw_total_return:.2f}%", f"{cw_volatility*100:.2f}%", f"{cw_sharpe:.4f}"]
+    })
+    
+    print(f"\n📊 COMPARISON TABLE:")
+    print(comparison_df.to_string(index=False))
     
     plt.plot(cw_cumulative.index, cw_cumulative, 
             label='Capitalization-Weighted', linewidth=2, color='red')
