@@ -178,6 +178,47 @@ print("📊 RETURN SUMMARY:")
 print(summary_returns)
 
 # =============================================================================
+# ANNUALIZED MEAN CHART
+# =============================================================================
+
+print(f"\n📊 Tạo biểu đồ Annualized Mean...")
+
+plt.figure(figsize=(12, 6))
+annualized_mean_data = summary_returns['Annualized Mean'].sort_values(ascending=False)
+colors = ['green' if x > 0 else 'red' for x in annualized_mean_data.values]
+
+bars = plt.bar(annualized_mean_data.index, annualized_mean_data.values, color=colors, alpha=0.7)
+
+plt.title('Annualized Mean by Stock', fontsize=16, fontweight='bold')
+plt.xlabel('Stocks', fontsize=12)
+plt.ylabel('Annualized Mean', fontsize=12)
+plt.xticks(rotation=45)
+plt.grid(True, alpha=0.3, axis='y')
+plt.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+
+# Add value labels on bars
+for bar, value in zip(bars, annualized_mean_data.values):
+    plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005 if value >= 0 else bar.get_height() - 0.015,
+            f'{value:.4f}', ha='center', va='bottom' if value >= 0 else 'top', fontweight='bold', fontsize=11)
+
+plt.tight_layout()
+plt.savefig('charts/annualized_mean_chart.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+print(f"\n📊 Annualized Mean Analysis:")
+print("-" * 50)
+positive_returns = annualized_mean_data[annualized_mean_data > 0]
+negative_returns = annualized_mean_data[annualized_mean_data <= 0]
+
+print(f"   • Stocks with positive annualized mean: {len(positive_returns)}/{len(annualized_mean_data)}")
+print(f"   • Stocks with negative annualized mean: {len(negative_returns)}/{len(annualized_mean_data)}")
+print(f"   • Best performer: {annualized_mean_data.idxmax()} ({annualized_mean_data.max():.4f})")
+print(f"   • Worst performer: {annualized_mean_data.idxmin()} ({annualized_mean_data.min():.4f})")
+print(f"   • Average annualized mean: {annualized_mean_data.mean():.4f}")
+
+print(f"\n✅ Annualized Mean chart completed!")
+
+# =============================================================================
 # ƯỚC LƯỢNG ĐỘ BIẾN ĐỘNG
 # =============================================================================
 
