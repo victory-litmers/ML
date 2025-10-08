@@ -185,9 +185,8 @@ print(f"\n📊 Tạo biểu đồ Annualized Mean...")
 
 plt.figure(figsize=(12, 6))
 annualized_mean_data = summary_returns['Annualized Mean'].sort_values(ascending=False)
-colors = ['green' if x > 0 else 'red' for x in annualized_mean_data.values]
 
-bars = plt.bar(annualized_mean_data.index, annualized_mean_data.values, color=colors, alpha=0.7)
+bars = plt.bar(annualized_mean_data.index, annualized_mean_data.values, color='steelblue', alpha=0.7)
 
 plt.title('Annualized Mean by Stock', fontsize=16, fontweight='bold')
 plt.xlabel('Stocks', fontsize=12)
@@ -244,9 +243,8 @@ print(f"\n📊 Tạo biểu đồ Annual Volatility...")
 
 plt.figure(figsize=(12, 6))
 volatility_data = risk_df['Volatility'].sort_values(ascending=False)
-colors = ['red', 'orange', 'gold', 'lightgreen', 'green', 'darkgreen']
 
-bars = plt.bar(volatility_data.index, volatility_data.values, color=colors, alpha=0.7)
+bars = plt.bar(volatility_data.index, volatility_data.values, color='steelblue', alpha=0.7)
 
 plt.title('Annual Volatility by Stock', fontsize=16, fontweight='bold')
 plt.xlabel('Stocks', fontsize=12)
@@ -375,9 +373,8 @@ rtrr_weights = rtrr_normalized
 
 plt.figure(figsize=(12, 6))
 rtrr_weights_sorted = rtrr_weights.sort_values(ascending=False)
-colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
 
-bars = plt.bar(rtrr_weights_sorted.index, rtrr_weights_sorted.values, color=colors, alpha=0.8)
+bars = plt.bar(rtrr_weights_sorted.index, rtrr_weights_sorted.values, color='steelblue', alpha=0.8)
 
 plt.title('RTRR Normalized Weights by Stock', fontsize=16, fontweight='bold')
 plt.xlabel('Stocks', fontsize=12)
@@ -406,7 +403,7 @@ print(f"\n📊 RTRR NORMALIZED WEIGHTS TABLE:")
 print("=" * 50)
 rtrr_weights_sorted_table = rtrr_weights.sort_values(ascending=False)
 for ticker, weight in rtrr_weights_sorted_table.items():
-    print(f"   • {ticker}: {weight:.4f}")
+    print(f"   • {ticker}: {weight:.6f}")
 
 print(f"\n📊 RTRR Weight Distribution:")
 print(f"   • Top 3 stocks: {rtrr_weights_sorted_table.head(3).sum():.4f} ({rtrr_weights_sorted_table.head(3).sum()*100:.1f}%)")
@@ -1559,9 +1556,8 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
             # Left plot: Annual Returns
             tickers = list(annual_returns.keys())
             returns = list(annual_returns.values())
-            colors = ['green' if r > 0 else 'red' for r in returns]
             
-            bars1 = ax1.bar(tickers, [r*100 for r in returns], color=colors, alpha=0.7)
+            bars1 = ax1.bar(tickers, [r*100 for r in returns], color='steelblue', alpha=0.7)
             ax1.set_title(f'{year} ML Predicted Annual Returns', fontsize=14, fontweight='bold')
             ax1.set_ylabel('Annual Return (%)', fontsize=12)
             ax1.grid(True, alpha=0.3)
@@ -1576,9 +1572,8 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
             
             # Right plot: Sharpe Ratios
             sharpe_values = list(sharpe_ratios.values())
-            colors2 = ['green' if s > 0 else 'red' for s in sharpe_values]
             
-            bars2 = ax2.bar(tickers, sharpe_values, color=colors2, alpha=0.7)
+            bars2 = ax2.bar(tickers, sharpe_values, color='steelblue', alpha=0.7)
             ax2.set_title(f'{year} ML Predicted Sharpe Ratios', fontsize=14, fontweight='bold')
             ax2.set_ylabel('Sharpe Ratio', fontsize=12)
             ax2.grid(True, alpha=0.3)
