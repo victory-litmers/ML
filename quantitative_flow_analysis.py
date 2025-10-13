@@ -242,6 +242,39 @@ print(risk_df.sort_values(by='Volatility', ascending=False))
 print(f"\n📊 Tạo biểu đồ Annual Volatility...")
 
 plt.figure(figsize=(12, 6))
+daily_volatility_data = risk_df['Volatility'].sort_values(ascending=False)
+
+bars = plt.bar(daily_volatility_data.index, daily_volatility_data.values, color='steelblue', alpha=0.7)
+
+plt.title('Annual Volatility by Stock', fontsize=16, fontweight='bold')
+plt.xlabel('Stocks', fontsize=12)
+plt.ylabel('Annual Volatility', fontsize=12)
+plt.xticks(rotation=45)
+plt.grid(True, alpha=0.3, axis='y')
+
+# Add value labels on bars with exact 6 decimal places
+for bar, value in zip(bars, daily_volatility_data.values):
+    plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.0005,
+            f'{value:.6f}', ha='center', va='bottom', fontweight='bold', fontsize=11)
+
+plt.tight_layout()
+plt.savefig('charts/annual_volatility_column_chart.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+print(f"\n📊 Annual Volatility Values:")
+print("-" * 50)
+for ticker, vol in daily_volatility_data.items():
+    print(f"   • {ticker}: {vol:.6f}")
+
+print(f"\n✅ Annual Volatility chart completed!")
+
+# =============================================================================
+# ANNUAL VOLATILITY CHART
+# =============================================================================
+
+print(f"\n📊 Tạo biểu đồ Annual Volatility...")
+
+plt.figure(figsize=(12, 6))
 volatility_data = risk_df['Volatility'].sort_values(ascending=False)
 
 bars = plt.bar(volatility_data.index, volatility_data.values, color='steelblue', alpha=0.7)
@@ -367,9 +400,16 @@ print(f"   • Worst RTRR: {rtrr_stocks.min():.4f} ({rtrr_stocks.idxmin()})")
 print(f"\n📊 Tạo biểu đồ RTRR Normalized Weights...")
 
 # Chuẩn hóa RTRR thành trọng số (weights)
-# Sử dụng softmax normalization để tạo trọng số phân phối
-rtrr_normalized = np.exp(rtrr_stocks) / np.sum(np.exp(rtrr_stocks))
-rtrr_weights = rtrr_normalized
+# Chỉ giữ lại những RTRR dương (loại bỏ RTRR âm)
+rtrr_positive = rtrr_stocks[rtrr_stocks > 0]
+print(f"   📊 Loại bỏ {len(rtrr_stocks) - len(rtrr_positive)} cổ phiếu có RTRR âm")
+print(f"   📊 Giữ lại {len(rtrr_positive)} cổ phiếu có RTRR dương: {list(rtrr_positive.index)}")
+
+# Sử dụng softmax normalization cho các RTRR dương
+rtrr_weights = pd.Series(0.0, index=rtrr_stocks.index)  # Khởi tạo tất cả = 0
+if len(rtrr_positive) > 0:
+    rtrr_normalized = rtrr_positive / np.sum(rtrr_positive)
+    rtrr_weights[rtrr_positive.index] = rtrr_normalized
 
 plt.figure(figsize=(12, 6))
 rtrr_weights_sorted = rtrr_weights.sort_values(ascending=False)
@@ -1332,6 +1372,29 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     print(f"   • Weight range: {latest_weights.max() - latest_weights.min():.4f}")
     print(f"   • Total weights sum: {latest_weights.sum():.4f}")
     
+    # Vẽ biểu đồ Cap-Weighted Portfolio Weights
+    plt.figure(figsize=(12, 6))
+    cap_weights_sorted = latest_weights.sort_values(ascending=False)
+    
+    bars = plt.bar(cap_weights_sorted.index, cap_weights_sorted.values, color='steelblue', alpha=0.8)
+    
+    plt.title('Cap-Weighted Portfolio Weights by Stock', fontsize=16, fontweight='bold')
+    plt.xlabel('Stocks', fontsize=12)
+    plt.ylabel('Weight', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.grid(True, alpha=0.3, axis='y')
+    
+    # Add value labels on bars
+    for bar, value in zip(bars, cap_weights_sorted.values):
+        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                f'{value:.6f}', ha='center', va='bottom', fontweight='bold', fontsize=11)
+    
+    plt.tight_layout()
+    plt.savefig('charts/cap_weighted_weights_chart.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    print(f"\n✅ Cap-Weighted Weights chart saved!")
+    
     # Print Cap-Weighted Portfolio Weights for last month (July 2025)
     print(f"\n📊 CAP-WEIGHTED PORTFOLIO WEIGHTS (Last Month - July 2025):")
     print("=" * 60)
@@ -1506,7 +1569,9 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     print("   • wealth_index_chart.png") 
     print("   • drawdown_analysis_chart.png")
     print("   • annual_return_chart.png")
+    print("   • daily_volatility_column_chart.png")
     print("   • annual_volatility_chart.png")
+    print("   • cap_weighted_weights_chart.png")
     print("   • cw_ew_comparison_chart.png")
     print("   • ml_predicted_annual_returns_line_chart.png")
     print("   • ml_predicted_annual_returns_heatmap.png")
