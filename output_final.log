@@ -1,0 +1,557 @@
+✅ vnstock imported successfully
+📊 QUANTITATIVE FLOW ANALYSIS - VIETNAMESE ENERGY FIRMS
+======================================================================
+
+📊 Thu thập dữ liệu cho 6 mã cổ phiếu năng lượng...
+   📈 PLX...
+   ✅ PLX: 1403 ngày giao dịch
+   📈 OIL...
+   ✅ OIL: 1403 ngày giao dịch
+   📈 GAS...
+   ✅ GAS: 1403 ngày giao dịch
+   📈 PPC...
+   ✅ PPC: 1403 ngày giao dịch
+   📈 GEG...
+   ✅ GEG: 1403 ngày giao dịch
+   📈 POW...
+   ✅ POW: 1403 ngày giao dịch
+
+📊 Tạo DataFrame tổng hợp...
+✅ DataFrame tổng hợp: (1403, 7)
+✅ Stock DataFrame: (1403, 6)
+
+📊 Phân tích dữ liệu thiếu...
+2025-10-13 16:03:59.781 Python[3970:216728] +[IMKClient subclass]: chose IMKClient_Modern
+2025-10-13 16:03:59.781 Python[3970:216728] +[IMKInputSession subclass]: chose IMKInputSession_Modern
+✅ Sau khi xử lý missing values: (1403, 6)
+
+📊 RETURN AND RISK ANALYSIS...
+
+📊 Tính toán lợi nhuận...
+📊 RETURN SUMMARY:
+     Daily Mean  Monthly Mean  Annualized Mean  Cumulative Return
+PLX    0.000089      0.001862         0.022391          -0.149171
+OIL    0.000757      0.016013         0.208194           0.646825
+GAS    0.000279      0.005866         0.072112           0.119052
+PPC   -0.000080     -0.001673        -0.019741          -0.264512
+GEG    0.000275      0.005783         0.071060          -0.034582
+POW    0.000517      0.010915         0.137957           0.396476
+
+📊 Tạo biểu đồ Annualized Mean...
+
+📊 Annualized Mean Analysis:
+--------------------------------------------------
+   • Stocks with positive annualized mean: 5/6
+   • Stocks with negative annualized mean: 1/6
+   • Best performer: OIL (0.2082)
+   • Worst performer: PPC (-0.0197)
+   • Average annualized mean: 0.0820
+
+✅ Annualized Mean chart completed!
+
+📊 Ước lượng độ biến động...
+📊 RISK SUMMARY:
+     Daily Std  Variance  Volatility
+OIL   0.028321  0.000802    0.028321
+GEG   0.024499  0.000600    0.024499
+POW   0.023609  0.000557    0.023609
+PLX   0.020167  0.000407    0.020167
+GAS   0.019902  0.000396    0.019902
+PPC   0.016719  0.000280    0.016719
+
+📊 Tạo biểu đồ Annual Volatility...
+
+📊 Annual Volatility Values:
+--------------------------------------------------
+   • OIL: 0.028321
+   • GEG: 0.024499
+   • POW: 0.023609
+   • PLX: 0.020167
+   • GAS: 0.019902
+   • PPC: 0.016719
+
+✅ Annual Volatility chart completed!
+
+📊 Tạo biểu đồ Annual Volatility...
+
+📊 Annual Volatility Analysis:
+--------------------------------------------------
+   • Highest volatility: 0.0283 (OIL)
+   • Lowest volatility: 0.0167 (PPC)
+   • Average volatility: 0.0222
+   • Volatility range: 0.0116
+
+📊 Risk Categories:
+   • 🔴 High Risk (>2.5%): 1 cổ phiếu
+   • 🟡 Medium Risk (2.0%-2.5%): 3 cổ phiếu
+   • 🟢 Low Risk (<2.0%): 2 cổ phiếu
+
+✅ Annual Volatility chart completed!
+📊 SEMIDeviation:
+OIL    0.020931
+GEG    0.016837
+POW    0.016719
+PLX    0.015047
+GAS    0.014777
+PPC    0.011868
+dtype: float64
+📊 Annualized Volatility (by Stock):
+OIL    0.447792
+GEG    0.387367
+POW    0.373291
+PLX    0.318867
+GAS    0.314683
+PPC    0.264345
+dtype: float64
+📊 Annualized Return (by Stock):
+OIL    0.093029
+POW    0.061358
+GAS    0.020260
+GEG   -0.006256
+PLX   -0.028395
+PPC   -0.053309
+dtype: float64
+📊 RTRR (Return-to-Risk Ratio) by Stock:
+OIL    0.207752
+POW    0.164370
+GAS    0.064382
+GEG   -0.016150
+PLX   -0.089050
+PPC   -0.201665
+dtype: float64
+📊 RTRR DataFrame (by Stock):
+     Annualized Return  Annualized Volatility      RTRR
+OIL           0.093029               0.447792  0.207752
+POW           0.061358               0.373291  0.164370
+GAS           0.020260               0.314683  0.064382
+GEG          -0.006256               0.387367 -0.016150
+PLX          -0.028395               0.318867 -0.089050
+PPC          -0.053309               0.264345 -0.201665
+📊 Sharpe Ratio (by Stock):
+OIL    0.140756
+POW    0.084004
+GAS   -0.030952
+GEG   -0.093596
+PLX   -0.183133
+PPC   -0.315153
+dtype: float64
+
+📊 Sharpe Ratio & Risk-Adjusted Metrics...
+
+📊 BẢNG TỔNG HỢP RISK-ADJUSTED METRICS:
+================================================================================
+     Annualized Return  Annualized Volatility    RTRR  Sharpe Ratio
+OIL             0.0930                 0.4478  0.2078        0.1408
+POW             0.0614                 0.3733  0.1644        0.0840
+GAS             0.0203                 0.3147  0.0644       -0.0310
+GEG            -0.0063                 0.3874 -0.0162       -0.0936
+PLX            -0.0284                 0.3189 -0.0891       -0.1831
+PPC            -0.0533                 0.2643 -0.2017       -0.3152
+
+📊 Risk-free rate sử dụng: 3.0%
+📊 Số cổ phiếu có Sharpe ratio dương: 2/6
+📊 Sharpe ratio trung bình: -0.0663
+
+📊 RTRR (RETURN-TO-RISK RATIO) TABLE:
+======================================================================
+     Annualized Return  Annualized Volatility    RTRR
+OIL             0.0930                 0.4478  0.2078
+POW             0.0614                 0.3733  0.1644
+GAS             0.0203                 0.3147  0.0644
+GEG            -0.0063                 0.3874 -0.0162
+PLX            -0.0284                 0.3189 -0.0891
+PPC            -0.0533                 0.2643 -0.2017
+
+📊 RTRR Summary:
+   • RTRR = Annualized Return / Annualized Volatility
+   • Đo lường mức lợi nhuận nhận được cho mỗi đơn vị rủi ro
+   • Best RTRR: 0.2078 (OIL)
+   • Worst RTRR: -0.2017 (PPC)
+
+📊 Tạo biểu đồ RTRR Normalized Weights...
+   📊 Loại bỏ 3 cổ phiếu có RTRR âm
+   📊 Giữ lại 3 cổ phiếu có RTRR dương: ['OIL', 'GAS', 'POW']
+
+📊 RTRR Normalized Weights Analysis:
+--------------------------------------------------
+   • Highest weight: 0.4759 (OIL)
+   • Lowest weight: 0.0000 (PLX)
+   • Weight range: 0.4759
+   • Total weights sum: 1.0000
+
+📊 RTRR NORMALIZED WEIGHTS TABLE:
+==================================================
+   • OIL: 0.475945
+   • POW: 0.376561
+   • GAS: 0.147494
+   • PLX: 0.000000
+   • PPC: 0.000000
+   • GEG: 0.000000
+
+📊 RTRR Weight Distribution:
+   • Top 3 stocks: 1.0000 (100.0%)
+   • Bottom 3 stocks: 0.0000 (0.0%)
+
+✅ RTRR Normalized Weights chart completed!
+
+📊 Max Drawdown Calculation...
+
+📊 MAX DRAWDOWN ANALYSIS:
+============================================================
+     Initial Wealth  Final Wealth  Total Return  Max Drawdown
+OIL            1000     1646.8254        0.6468       -0.7088
+GEG            1000      965.4179       -0.0346       -0.6440
+PLX            1000      850.8287       -0.1492       -0.5947
+PPC            1000      735.4881       -0.2645       -0.5418
+POW            1000     1396.4758        0.3965       -0.5246
+GAS            1000     1119.0517        0.1191       -0.4678
+
+📊 Drawdown Statistics:
+   • Cổ phiếu có Max Drawdown thấp nhất: OIL (-0.7088)
+   • Cổ phiếu có Max Drawdown cao nhất: GAS (-0.4678)
+   • Max Drawdown trung bình: -0.5803
+
+📊 PORTFOLIO OPTIMIZATION STRATEGIES...
+
+📊 PORTFOLIO OPTIMIZATION OVERVIEW:
+============================================================
+📊 Số lượng cổ phiếu trong danh mục: 6
+📊 Cổ phiếu: PLX, OIL, GAS, PPC, GEG, POW
+📊 Thời gian phân tích: 1402 ngày giao dịch
+📊 Risk-free rate: 3.0%
+
+📊 Danh mục tối đa hóa Sharpe Ratio...
+Lợi nhuận hàng năm hóa:
+OIL    0.093029
+POW    0.061358
+GAS    0.020260
+GEG   -0.006256
+PLX   -0.028395
+PPC   -0.053309
+dtype: float64
+Ma trận hiệp phương sai:
+          PLX       OIL       GAS       PPC       GEG       POW
+PLX  0.000407  0.000355  0.000226  0.000131  0.000208  0.000233
+OIL  0.000355  0.000802  0.000315  0.000169  0.000314  0.000316
+GAS  0.000226  0.000315  0.000396  0.000106  0.000190  0.000220
+PPC  0.000131  0.000169  0.000106  0.000280  0.000155  0.000174
+GEG  0.000208  0.000314  0.000190  0.000155  0.000600  0.000306
+POW  0.000233  0.000316  0.000220  0.000174  0.000306  0.000557
+Equal weights: [0.16666667 0.16666667 0.16666667 0.16666667 0.16666667 0.16666667]
+Portfolio return với equal weights: 0.0144
+Portfolio volatility với equal weights: 0.0166
+📊 WEIGHTS TABLE:
+  Assets  Tangency Portfolio  GMV Portfolio  Equal-Weighted Portfolio
+0    PLX            0.948788       0.205900                  0.166667
+1    OIL           -0.795124      -0.097284                  0.166667
+2    GAS            0.078479       0.279594                  0.166667
+3    PPC            1.174317       0.515596                  0.166667
+4    GEG            0.285827       0.086648                  0.166667
+5    POW           -0.692286       0.009547                  0.166667
+
+📊 Kiểm tra hiệu suất của các danh mục đầu tư (backtest)...
+
+📊 PORTFOLIO PERFORMANCE STATS:
+======================================================================
+                Mean Return  Volatility    RTRR  Sharpe
+Tangency            -0.0177      0.1189 -0.1487 -0.1487
+GMV                  0.0005      0.0652  0.0074  0.0074
+Equal-Weighted       0.0067      0.0812  0.0822  0.0822
+
+📊 RTRR (Return-to-Risk Ratio) Explanation:
+============================================================
+   • RTRR = Mean Return / Volatility
+   • Đo lường mức lợi nhuận nhận được cho mỗi đơn vị rủi ro
+   • Giá trị cao hơn = hiệu quả hơn trong việc tạo lợi nhuận so với rủi ro
+   • Khác với Sharpe Ratio: RTRR không trừ đi risk-free rate
+   • Portfolio có RTRR cao nhất: Equal-Weighted (0.0822)
+   • Portfolio có RTRR thấp nhất: Tangency (-0.1487)
+
+📊 CHI TIẾT PORTFOLIO STRATEGIES:
+======================================================================
+
+🎯 1. TANGENCY PORTFOLIO (Tối đa hóa Sharpe Ratio):
+   • Lợi nhuận trung bình: -0.0177
+   • Volatility: 0.1189
+   • RTRR: -0.1487
+   • Sharpe Ratio: -0.1487
+
+🛡️ 2. GMV PORTFOLIO (Global Minimum Variance):
+   • Lợi nhuận trung bình: 0.0005
+   • Volatility: 0.0652
+   • RTRR: 0.0074
+   • Sharpe Ratio: 0.0074
+
+⚖️ 3. EQUAL-WEIGHTED PORTFOLIO:
+   • Lợi nhuận trung bình: 0.0067
+   • Volatility: 0.0812
+   • RTRR: 0.0822
+   • Sharpe Ratio: 0.0822
+
+📊 SO SÁNH HIỆU SUẤT:
+==================================================
+🏆 Portfolio có Sharpe ratio tốt nhất: Equal-Weighted (0.0822)
+📈 Portfolio có lợi nhuận cao nhất: Equal-Weighted (0.0067)
+⚡ Portfolio có RTRR tốt nhất: Equal-Weighted (0.0822)
+🛡️ Portfolio có rủi ro thấp nhất: GMV (0.0652)
+
+📊 Advanced Portfolio Diversification and Risk Management...
+🎯 Phân tích 6 cổ phiếu năng lượng với TẤT CẢ dữ liệu thực
+📊 Lấy VN-Index từ file vnindex.xlsx...
+   🔍 Columns trong file: ['time', 'open', 'high', 'low', 'close', 'volume', 'Unnamed: 6']
+   ✅ VN-Index: (1401, 2)
+   📊 Volume: 618.5 triệu (TB), 2698.9 triệu (Max)
+   📊 Index: 1181.4 (TB), 1630.0 (Hiện tại)
+   📊 Date range: 2020-01-06 to 2025-08-15
+
+📊 Lấy quarterly financial timeseries (2020-01-01 - 2025-08-15):
+📊 Lấy quarterly timeseries cho PLX...
+   ✅ PLX: 22 quarters từ 2020-Q03 đến 2025-Q06 (2020-01-01 - 2025-08-15)
+      Latest: ROA=0.0003, Leverage=2.093
+📊 Lấy quarterly timeseries cho OIL...
+   ✅ OIL: 22 quarters từ 2020-Q03 đến 2025-Q06 (2020-01-01 - 2025-08-15)
+      Latest: ROA=0.0001, Leverage=2.833
+📊 Lấy quarterly timeseries cho GAS...
+   ✅ GAS: 22 quarters từ 2020-Q03 đến 2025-Q06 (2020-01-01 - 2025-08-15)
+      Latest: ROA=0.0014, Leverage=0.289
+📊 Lấy quarterly timeseries cho PPC...
+   ✅ PPC: 22 quarters từ 2020-Q03 đến 2025-Q06 (2020-01-01 - 2025-08-15)
+      Latest: ROA=0.0004, Leverage=0.215
+📊 Lấy quarterly timeseries cho GEG...
+   ✅ GEG: 22 quarters từ 2020-Q03 đến 2025-Q06 (2020-01-01 - 2025-08-15)
+      Latest: ROA=0.0004, Leverage=1.337
+📊 Lấy quarterly timeseries cho POW...
+   ✅ POW: 22 quarters từ 2020-Q03 đến 2025-Q06 (2020-01-01 - 2025-08-15)
+      Latest: ROA=0.0002, Leverage=1.408
+
+📊 Kết quả thu thập:
+   ✅ VN-Index (Volume + Market): CÓ
+   ✅ Quarterly financial timeseries: 6/6 cổ phiếu
+
+📊 Thu thập dữ liệu giá:
+   ✅ PLX: 1403 ngày + quarterly financial data
+   ✅ OIL: 1403 ngày + quarterly financial data
+   ✅ GAS: 1403 ngày + quarterly financial data
+   ✅ PPC: 1403 ngày + quarterly financial data
+   ✅ GEG: 1403 ngày + quarterly financial data
+   ✅ POW: 1403 ngày + quarterly financial data
+
+📊 Stocks với ĐẦY ĐỦ dữ liệu thực: ['PLX', 'OIL', 'GAS', 'PPC', 'GEG', 'POW']
+
+📊 Data shape: Price (1403, 6), Returns (1402, 6)
+
+======================================================================
+📊 STEP 5: TIME SERIES CROSS-VALIDATION
+======================================================================
+
+📊 TIME SERIES CROSS-VALIDATION - EXPANDING WINDOW
+======================================================================
+
+📊 Fold 1: Train 2020 → Test 2021
+--------------------------------------------------
+   📊 Training samples: 1506, Test samples: 1500
+   ✅ MSE: 0.00050
+   ✅ R²: 0.18
+
+📊 Fold 2: Train 2020-2021 → Test 2022
+--------------------------------------------------
+   📊 Training samples: 3006, Test samples: 1494
+   ✅ MSE: 0.00068
+   ✅ R²: 0.18
+
+📊 Fold 3: Train 2020-2021-2022 → Test 2023
+--------------------------------------------------
+   📊 Training samples: 4500, Test samples: 1494
+   ✅ MSE: 0.00024
+   ✅ R²: 0.17
+
+📊 Fold 4: Train 2020-2021-2022-2023 → Test 2024
+--------------------------------------------------
+   📊 Training samples: 5994, Test samples: 1500
+   ✅ MSE: 0.00023
+   ✅ R²: 0.20
+
+📊 Fold 5: Train 2020-2021-2022-2023-2024 → Test 2025
+--------------------------------------------------
+   📊 Training samples: 7494, Test samples: 918
+   ✅ MSE: 0.00038
+   ✅ R²: 0.17
+
+📊 VALIDATION RESULTS TABLE:
+======================================================================
+ Giai đoạn test      MSE       R²
+           2021 0.000497 0.182929
+           2022 0.000681 0.175732
+           2023 0.000240 0.166393
+           2024 0.000227 0.202601
+           2025 0.000383 0.174035
+
+📊 AVERAGE VALIDATION METRICS:
+   • Average MSE: 0.00041
+   • Average R²: 0.18
+
+📊 Creating validation visualization...
+   ✅ Validation charts saved!
+      • time_series_cross_validation.png
+      • validation_metrics_table.png
+
+🎯 VALIDATION DECISION:
+   ⚠️ Model needs improvement (R²=0.18, MSE=0.00041)
+   ⚠️ Prediction results may be less reliable
+
+======================================================================
+⚠️ STEP 6: PREDICTIONS WITH CAUTION (Model not fully validated)
+======================================================================
+
+🔮 STATISTICAL PREDICTION 2026-2030 (Historical Pattern-Based)
+============================================================
+   Using statistical approach instead of ML to avoid overfitting
+
+🔮 Dự đoán 2026...
+   ✅ PLX: 2.07% return, Sharpe=-0.02
+   ✅ OIL: 23.41% return, Sharpe=0.46
+   ✅ GAS: 7.26% return, Sharpe=0.14
+   ✅ PPC: -1.67% return, Sharpe=-0.17
+   ✅ GEG: 5.95% return, Sharpe=0.08
+   ✅ POW: 13.33% return, Sharpe=0.28
+
+🔮 Dự đoán 2027...
+   ✅ PLX: 3.70% return, Sharpe=0.03
+   ✅ OIL: 22.27% return, Sharpe=0.49
+   ✅ GAS: 13.96% return, Sharpe=0.40
+   ✅ PPC: -0.44% return, Sharpe=-0.13
+   ✅ GEG: 9.58% return, Sharpe=0.20
+   ✅ POW: 16.14% return, Sharpe=0.40
+
+🔮 Dự đoán 2028...
+   ✅ PLX: -1.17% return, Sharpe=-0.11
+   ✅ OIL: 16.21% return, Sharpe=0.27
+   ✅ GAS: 6.18% return, Sharpe=0.10
+   ✅ PPC: -5.13% return, Sharpe=-0.27
+   ✅ GEG: 1.81% return, Sharpe=-0.02
+   ✅ POW: 12.56% return, Sharpe=0.24
+
+🔮 Dự đoán 2029...
+   ✅ PLX: 5.66% return, Sharpe=0.12
+   ✅ OIL: 29.07% return, Sharpe=0.74
+   ✅ GAS: 15.11% return, Sharpe=0.49
+   ✅ PPC: 1.29% return, Sharpe=-0.07
+   ✅ GEG: 11.46% return, Sharpe=0.28
+   ✅ POW: 20.74% return, Sharpe=0.60
+
+🔮 Dự đoán 2030...
+   ✅ PLX: 3.25% return, Sharpe=0.02
+   ✅ OIL: 26.24% return, Sharpe=0.53
+   ✅ GAS: 12.14% return, Sharpe=0.30
+   ✅ PPC: -1.45% return, Sharpe=-0.16
+   ✅ GEG: 4.50% return, Sharpe=0.05
+   ✅ POW: 10.36% return, Sharpe=0.21
+
+📊 CREATING VISUALIZATION CHARTS...
+   ⚠️ Skipping Portfolio Weights Comparison (no portfolio_results)
+   ⚠️ Skipping Efficient Frontier (no portfolio_results)
+   ⚠️ Skipping Equal-Weighted Portfolio Performance (no factor_results)
+   ⚠️ Skipping Cap-Weighted Portfolio Performance (no factor_results)
+   ⚠️ Skipping EW vs CW Comparison Chart (no factor_results)
+   ⚠️ Skipping Tangency Portfolio Analysis (no portfolio_results)
+   ⚠️ Skipping Risk-Return Scatter Plot (no quant_results)
+
+📊 EQUAL-WEIGHTED vs CAP-WEIGHTED PORTFOLIO COMPARISON:
+======================================================================
+
+📊 PORTFOLIO COMPARISON DATA:
+--------------------------------------------------
+📈 EQUAL-WEIGHTED PORTFOLIO:
+   • Final Cumulative Return: 1.2654
+   • Total Return: 0.2654
+   • Annualized Volatility: 0.2619
+   • Sharpe Ratio: 0.1775
+   • Weight per stock: 0.1667
+
+📊 CAP-WEIGHTED PORTFOLIO:
+   • Final Cumulative Return: 1.3270
+   • Total Return: 0.3270
+   • Annualized Volatility: 0.2574
+   • Sharpe Ratio: 0.2087
+
+📊 CAP-WEIGHTED PORTFOLIO WEIGHTS (Latest):
+==================================================
+   • GAS: 0.4093
+   • PLX: 0.2402
+   • GEG: 0.1045
+   • POW: 0.0989
+   • OIL: 0.0777
+   • PPC: 0.0696
+
+📊 Weight Statistics:
+   • Highest weight: 0.4093 (GAS)
+   • Lowest weight: 0.0696 (PPC)
+   • Weight range: 0.3397
+   • Total weights sum: 1.0000
+
+✅ Cap-Weighted Weights chart saved!
+
+📊 CAP-WEIGHTED PORTFOLIO WEIGHTS (Last Month - July 2025):
+============================================================
+   • GAS: 0.4139
+   • PLX: 0.2354
+   • GEG: 0.1071
+   • POW: 0.0935
+   • OIL: 0.0783
+   • PPC: 0.0718
+
+📊 July 2025 Weight Statistics:
+   • Highest weight: 0.4139 (GAS)
+   • Lowest weight: 0.0718 (PPC)
+   • Weight range: 0.3421
+   • Total weights sum: 1.0000
+
+📊 Weight Changes (Latest vs July 2025):
+   • POW: +0.0054 📈
+   • PLX: +0.0048 📈
+   • OIL: -0.0007 📉
+   • PPC: -0.0022 📉
+   • GEG: -0.0027 📉
+   • GAS: -0.0046 📉
+
+🏆 PERFORMANCE COMPARISON:
+----------------------------------------
+   • EW Outperformance vs CW: -0.0464
+   • Best Total Return: Cap-Weighted (0.3270)
+   • Lowest Volatility: Cap-Weighted (0.2574)
+   • Best Sharpe Ratio: Cap-Weighted (0.2087)
+
+📊 COMPARISON TABLE:
+                 Metric Equal-Weighted Cap-Weighted
+Final Cumulative Return         1.2654       1.3270
+           Total Return         0.2654       0.3270
+  Annualized Volatility         0.2619       0.2574
+           Sharpe Ratio         0.1775       0.2087
+✅ All visualization charts saved successfully!
+📊 Charts created:
+   • sharpe_ratio_chart.png
+   • rtrr_chart.png
+   • wealth_index_chart.png
+   • drawdown_analysis_chart.png
+   • annual_return_chart.png
+   • daily_volatility_column_chart.png
+   • annual_volatility_chart.png
+   • cap_weighted_weights_chart.png
+   • cw_ew_comparison_chart.png
+   • ml_predicted_annual_returns_line_chart.png
+   • ml_predicted_annual_returns_heatmap.png
+   • minimum_drawdown_chart.png
+
+📊 CREATING ML PREDICTION CHARTS...
+✅ ML Prediction charts saved successfully!
+📊 ML Charts created:
+   • ml_prediction_2026_chart.png
+   • ml_prediction_2027_chart.png
+   • ml_prediction_2028_chart.png
+   • ml_prediction_2029_chart.png
+   • ml_prediction_2030_chart.png
+   • ml_prediction_summary_5years_chart.png
+✅ QUANTITATIVE FLOW ANALYSIS HOÀN THÀNH!
+======================================================================
+📊 Các biểu đồ đã được lưu trong thư mục 'charts/'
+📊 Kết quả phân tích đã được in ra console
