@@ -1467,30 +1467,26 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     plt.savefig('charts/cw_ew_comparison_chart.png', dpi=300, bbox_inches='tight')
     plt.show()
     
-    # 13. ML Predicted Annual Returns Line Chart
+    # 13. ML Predicted Annual Returns Line Chart (2026-2030 ONLY)
     plt.figure(figsize=(14, 8))
     
-    # Get ML predictions data (simulated for demonstration)
-    years = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]
+    # ONLY future prediction years
+    years = [2026, 2027, 2028, 2029, 2030]
     
-    # Historical data (from actual analysis)
-    historical_returns = {
-        'PLX': [-0.0284, -0.0284, -0.0284, -0.0284, -0.0284, -0.0284, 0.0207, 0.0370, -0.0117, 0.0566, 0.0325],
-        'OIL': [0.0930, 0.0930, 0.0930, 0.0930, 0.0930, 0.0930, 0.2341, 0.2227, 0.1621, 0.2907, 0.2624],
-        'GAS': [0.0203, 0.0203, 0.0203, 0.0203, 0.0203, 0.0203, 0.0726, 0.1396, 0.0618, 0.1511, 0.1214],
-        'PPC': [-0.0533, -0.0533, -0.0533, -0.0533, -0.0533, -0.0533, -0.0167, -0.0044, -0.0513, 0.0129, -0.0145],
-        'GEG': [-0.0063, -0.0063, -0.0063, -0.0063, -0.0063, -0.0063, 0.0595, 0.0958, 0.0181, 0.1146, 0.0450],
-        'POW': [0.0614, 0.0614, 0.0614, 0.0614, 0.0614, 0.0614, 0.1333, 0.1614, 0.1256, 0.2074, 0.1036]
+    # Future predictions only (from actual analysis)
+    future_returns = {
+        'PLX': [0.0207, 0.0370, -0.0117, 0.0566, 0.0325],
+        'OIL': [0.2341, 0.2227, 0.1621, 0.2907, 0.2624],
+        'GAS': [0.0726, 0.1396, 0.0618, 0.1511, 0.1214],
+        'PPC': [-0.0167, -0.0044, -0.0513, 0.0129, -0.0145],
+        'GEG': [0.0595, 0.0958, 0.0181, 0.1146, 0.0450],
+        'POW': [0.1333, 0.1614, 0.1256, 0.2074, 0.1036]
     }
     
     colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown']
     
-    for i, (ticker, returns) in enumerate(historical_returns.items()):
+    for i, (ticker, returns) in enumerate(future_returns.items()):
         plt.plot(years, returns, label=ticker, linewidth=2, color=colors[i], marker='o')
-    
-    # Add vertical line to separate historical and predicted
-    plt.axvline(x=2025.5, color='black', linestyle='--', alpha=0.7, linewidth=2)
-    plt.text(2025.7, 0.3, 'ML Predictions', rotation=90, fontsize=12, fontweight='bold')
     
     plt.title('ML Predicted Annual Returns (2026-2030)', fontsize=16, fontweight='bold')
     plt.xlabel('Year', fontsize=12)
@@ -1509,17 +1505,17 @@ def create_visualization_charts(quant_results, factor_results, portfolio_results
     # Create heatmap data
     heatmap_data = []
     for ticker in ['PLX', 'OIL', 'GAS', 'PPC', 'GEG', 'POW']:
-        heatmap_data.append(historical_returns[ticker][5:])  # 2025-2030
+        heatmap_data.append(future_returns[ticker])  # 2026-2030
     
     heatmap_df = pd.DataFrame(heatmap_data, 
                              index=['PLX', 'OIL', 'GAS', 'PPC', 'GEG', 'POW'],
-                             columns=[2025, 2026, 2027, 2028, 2029, 2030])
+                             columns=[2026, 2027, 2028, 2029, 2030])
     
     # Create heatmap
     sb.heatmap(heatmap_df, annot=True, cmap='RdYlGn', center=0, 
                 fmt='.3f', cbar_kws={'label': 'Annual Return'})
     
-    plt.title('ML Predicted Annual Returns Heatmap (2025-2030)', fontsize=16, fontweight='bold')
+    plt.title('ML Predicted Annual Returns Heatmap (2026-2030)', fontsize=16, fontweight='bold')
     plt.xlabel('Year', fontsize=12)
     plt.ylabel('Stock', fontsize=12)
     
@@ -1631,7 +1627,7 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
             # Add value labels
             for bar, ret in zip(bars1, returns):
                 height = bar.get_height()
-                ax1.text(bar.get_x() + bar.get_width()/2., height + 5 if height >= 0 else height - 5,
+                ax1.text(bar.get_x() + bar.get_width()/2., height + 0.5 if height >= 0 else height - 0.5,
                         f'{ret*100:.1f}%', ha='center', va='bottom' if height >= 0 else 'top', 
                         fontweight='bold', fontsize=10)
             
@@ -1647,7 +1643,7 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
             # Add value labels
             for bar, sharpe in zip(bars2, sharpe_values):
                 height = bar.get_height()
-                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.1 if height >= 0 else height - 0.1,
+                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.01 if height >= 0 else height - 0.01,
                         f'{sharpe:.2f}', ha='center', va='bottom' if height >= 0 else 'top', 
                         fontweight='bold', fontsize=10)
             
@@ -1658,28 +1654,23 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
     # Create summary chart for all 5 years
     plt.figure(figsize=(16, 10))
     
-    # Prepare data for heatmap
+    # Prepare data for heatmap (transpose: years as rows, stocks as columns)
     years_data = []
     all_returns = []
     
-    for year in years:
-        if year in future_predictions:
-            year_data = future_predictions[year]
-            year_returns = []
-            
-            for ticker in successful_tickers:
-                if ticker in year_data:
-                    # FIXED: Use compound formula for annual return
-                    daily_return = year_data[ticker]
-                    if daily_return > -0.99:
-                        annual_return = (1 + daily_return) ** 250 - 1
-                    else:
-                        annual_return = -0.99  # Cap at -99% maximum loss
-                    year_returns.append(annual_return * 100)  # Convert to percentage
+    for ticker in successful_tickers:
+        ticker_returns = []
+        for year in years:
+            if year in future_predictions and ticker in future_predictions[year]:
+                daily_return = future_predictions[year][ticker]
+                if daily_return > -0.99:
+                    annual_return = (1 + daily_return) ** 250 - 1
                 else:
-                    year_returns.append(0)
-            
-            all_returns.append(year_returns)
+                    annual_return = -0.99  # Cap at -99% maximum loss
+                ticker_returns.append(annual_return * 100)
+            else:
+                ticker_returns.append(0)
+        all_returns.append(ticker_returns)
     
     # Create heatmap
     import matplotlib.colors as mcolors
@@ -1689,8 +1680,10 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
     n_bins = 100
     cmap = mcolors.LinearSegmentedColormap.from_list('custom', colors, N=n_bins)
     
-    im = plt.imshow(all_returns, cmap=cmap, aspect='auto', 
-                    vmin=-100, vmax=100, interpolation='nearest')
+    # Transpose to have years as rows, stocks as columns
+    all_returns_T = np.array(all_returns).T
+    im = plt.imshow(all_returns_T, cmap=cmap, aspect='auto', 
+                    vmin=-10, vmax=35, interpolation='nearest')
     
     # Set ticks and labels
     plt.xticks(range(len(successful_tickers)), successful_tickers, fontsize=12)
@@ -1706,11 +1699,10 @@ def create_ml_prediction_charts(future_predictions, successful_tickers):
     # Add text annotations
     for i in range(len(years)):
         for j in range(len(successful_tickers)):
-            if i < len(all_returns) and j < len(all_returns[i]):
-                value = all_returns[i][j]
-                color = 'white' if abs(value) > 50 else 'black'
-                plt.text(j, i, f'{value:.1f}%', ha='center', va='center', 
-                        color=color, fontweight='bold', fontsize=9)
+            value = all_returns_T[i][j]
+            color = 'white' if abs(value) > 20 else 'black'
+            plt.text(j, i, f'{value:.1f}%', ha='center', va='center', 
+                    color=color, fontweight='bold', fontsize=9)
     
     plt.tight_layout()
     plt.savefig('charts/ml_prediction_summary_5years_chart.png', dpi=300, bbox_inches='tight')
@@ -1938,7 +1930,7 @@ def plot_validation_results(validation_df, df_return_stocks):
     table_data = []
     for _, row in validation_df.iterrows():
         table_data.append([
-            row['Giai đoạn test'],
+            int(row['Giai đoạn test']),  # Convert to integer to remove .0
             f"{row['MSE']:.5f}",
             f"{row['R²']:.2f}"
         ])
@@ -2064,7 +2056,7 @@ def predict_future_with_real_data(models_dict, X_columns, quarterly_financial_da
             daily_return = (1 + predicted_return) ** (1/250) - 1
             year_predictions[ticker] = daily_return
             
-            print(f"   ✅ {ticker}: {predicted_return:.2%} return, Sharpe={sharpe:.2f}")
+            print(f"   ✅ {ticker}: {predicted_return:.6f} return, Sharpe={sharpe:.6f}")
         
         predictions[year] = year_predictions
     

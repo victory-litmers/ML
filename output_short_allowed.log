@@ -1,5 +1,5 @@
-2025-10-13 23:18:13.236 Python[29787:741018] +[IMKClient subclass]: chose IMKClient_Modern
-2025-10-13 23:18:13.236 Python[29787:741018] +[IMKInputSession subclass]: chose IMKInputSession_Modern
+2025-10-13 23:25:48.427 Python[35238:759477] +[IMKClient subclass]: chose IMKClient_Modern
+2025-10-13 23:25:48.427 Python[35238:759477] +[IMKInputSession subclass]: chose IMKInputSession_Modern
 ✅ vnstock imported successfully
 📊 QUANTITATIVE FLOW ANALYSIS - VIETNAMESE ENERGY FIRMS
 ======================================================================
@@ -243,20 +243,20 @@ Portfolio return với equal weights: 0.0144
 Portfolio volatility với equal weights: 0.0166
 📊 WEIGHTS TABLE (sorted by Sharpe Ratio):
 Assets Tangency Portfolio GMV Portfolio Equal-Weighted Portfolio
-   OIL          -0.795124     -0.097284                 0.166667
-   POW          -0.692286      0.009547                 0.166667
-   GAS           0.078479      0.279594                 0.166667
-   GEG           0.285827      0.086648                 0.166667
-   PLX           0.948788      0.205900                 0.166667
-   PPC           1.174317      0.515596                 0.166667
+   OIL           1.336581     -0.095691                 0.166667
+   POW           1.267426      0.025591                 0.166667
+   GAS          -0.104007      0.284397                 0.166667
+   GEG          -0.500000      0.055893                 0.166667
+   PLX          -0.500000      0.200153                 0.166667
+   PPC          -0.500000      0.529658                 0.166667
 
 📊 Kiểm tra hiệu suất của các danh mục đầu tư (backtest)...
 
 📊 PORTFOLIO PERFORMANCE STATS:
 ======================================================================
                 Mean Return  Volatility    RTRR  Sharpe
-Tangency            -0.0177      0.1189 -0.1487 -0.1487
-GMV                  0.0005      0.0652  0.0074  0.0074
+Tangency             0.0309      0.2167  0.1424  0.1424
+GMV                  0.0005      0.0656  0.0073  0.0073
 Equal-Weighted       0.0067      0.0812  0.0822  0.0822
 
 📊 RTRR (Return-to-Risk Ratio) Explanation:
@@ -265,23 +265,23 @@ Equal-Weighted       0.0067      0.0812  0.0822  0.0822
    • Đo lường mức lợi nhuận nhận được cho mỗi đơn vị rủi ro
    • Giá trị cao hơn = hiệu quả hơn trong việc tạo lợi nhuận so với rủi ro
    • Khác với Sharpe Ratio: RTRR không trừ đi risk-free rate
-   • Portfolio có RTRR cao nhất: Equal-Weighted (0.0822)
-   • Portfolio có RTRR thấp nhất: Tangency (-0.1487)
+   • Portfolio có RTRR cao nhất: Tangency (0.1424)
+   • Portfolio có RTRR thấp nhất: GMV (0.0073)
 
 📊 CHI TIẾT PORTFOLIO STRATEGIES:
 ======================================================================
 
 🎯 1. TANGENCY PORTFOLIO (Tối đa hóa Sharpe Ratio):
-   • Lợi nhuận trung bình: -0.0177
-   • Volatility: 0.1189
-   • RTRR: -0.1487
-   • Sharpe Ratio: -0.1487
+   • Lợi nhuận trung bình: 0.0309
+   • Volatility: 0.2167
+   • RTRR: 0.1424
+   • Sharpe Ratio: 0.1424
 
 🛡️ 2. GMV PORTFOLIO (Global Minimum Variance):
    • Lợi nhuận trung bình: 0.0005
-   • Volatility: 0.0652
-   • RTRR: 0.0074
-   • Sharpe Ratio: 0.0074
+   • Volatility: 0.0656
+   • RTRR: 0.0073
+   • Sharpe Ratio: 0.0073
 
 ⚖️ 3. EQUAL-WEIGHTED PORTFOLIO:
    • Lợi nhuận trung bình: 0.0067
@@ -291,10 +291,10 @@ Equal-Weighted       0.0067      0.0812  0.0822  0.0822
 
 📊 SO SÁNH HIỆU SUẤT:
 ==================================================
-🏆 Portfolio có Sharpe ratio tốt nhất: Equal-Weighted (0.0822)
-📈 Portfolio có lợi nhuận cao nhất: Equal-Weighted (0.0067)
-⚡ Portfolio có RTRR tốt nhất: Equal-Weighted (0.0822)
-🛡️ Portfolio có rủi ro thấp nhất: GMV (0.0652)
+🏆 Portfolio có Sharpe ratio tốt nhất: Tangency (0.1424)
+📈 Portfolio có lợi nhuận cao nhất: Tangency (0.0309)
+⚡ Portfolio có RTRR tốt nhất: Tangency (0.1424)
+🛡️ Portfolio có rủi ro thấp nhất: GMV (0.0656)
 
 📊 Advanced Portfolio Diversification and Risk Management...
 🎯 Phân tích 6 cổ phiếu năng lượng với TẤT CẢ dữ liệu thực
